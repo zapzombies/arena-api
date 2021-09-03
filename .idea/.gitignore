@@ -1,0 +1,14 @@
+/build
+.gradle
+**/.idea/workspace.xml
+**/.idea/tasks.xml
+run
+.pat
+
+
+# By .idea - somehow that file not work for me
+/shelf/
+/workspace.xml
+/dataSources/
+/dataSources.local.xml
+/httpRequests/

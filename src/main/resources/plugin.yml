@@ -1,0 +1,6 @@
+name: ${name}
+version: ${version}
+main: ${groupId}.arenaapi.ArenaApi
+api-version: 1.16
+depend: [ ProtocolLib ]
+softdepend: [ PartyPlusPlus ]
