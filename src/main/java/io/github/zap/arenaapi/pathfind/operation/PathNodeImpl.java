@@ -17,7 +17,7 @@ class PathNodeImpl implements PathNode {
     PathNodeImpl parent;
 
     private final int hash;
-    private Vector3I offsetVector = Vectors.ZERO;
+    private Vector3I offsetVector = Vectors.ZERO_INT;
 
     private PathNodeImpl(int x, int y, int z, Score score, int hash) {
         this.x = x;

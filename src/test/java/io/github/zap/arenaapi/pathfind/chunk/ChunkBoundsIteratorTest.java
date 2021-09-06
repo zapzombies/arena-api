@@ -3,6 +3,7 @@ package io.github.zap.arenaapi.pathfind.chunk;
 import com.google.common.collect.ImmutableSet;
 import io.github.zap.arenaapi.pathfind.util.ChunkBoundsIterator;
 import io.github.zap.commons.vectors.*;
+import jdk.jshell.spi.ExecutionControl;
 import org.bukkit.util.BoundingBox;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,5 +77,10 @@ class ChunkBoundsIteratorTest {
                 iterator.next();
             }
         }
+    }
+
+    @Test
+    void testRemove() {
+        Assertions.assertThrows(UnsupportedOperationException.class, () -> iterator.remove());
     }
 }

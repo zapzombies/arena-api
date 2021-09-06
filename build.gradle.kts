@@ -2,8 +2,8 @@ import io.github.zap.build.gradle.convention.*
 
 // Uncomment to use local maven version - help local testing faster
 plugins {
-    // id("io.github.zap.build.gradle.convention.shadow-mc-plugin") version "0.0.0-SNAPSHOT"
     id("io.github.zap.build.gradle.convention.shadow-mc-plugin") version "1.0.0"
+    //id("io.github.zap.build.gradle.convention.shadow-mc-plugin") version "1.0.0"
 }
 
 description = "arena-api"
@@ -23,8 +23,8 @@ dependencies {
     }
     shade(project(":nms:nms-1_16_R3"))
 
-    shade("io.github.zap:zap-commons:1.0.0")
-    // shade("io.github.zap:zap-commons:0.0.0-SNAPSHOT")
+    //shade("io.github.zap:zap-commons:1.0.0")
+    shade("io.github.zap:zap-commons:0.0.0-SNAPSHOT")
 
     paperApi("1.16.5-R0.1-SNAPSHOT")
 
@@ -39,7 +39,7 @@ dependencies {
     relocate("org.apache.commons:commons-lang3:3.12.0")
 
     bukkitPlugin("io.github.zap:zap-party:1.0.0")
-    // bukkitPlugin("io.github.zap:zap-party:0.0.0-SNAPSHOT")
+    //bukkitPlugin("io.github.zap:zap-party:0.0.0-SNAPSHOT")
 
     bukkitPlugin("com.comphenix.protocol:ProtocolLib:4.7.0")
 
