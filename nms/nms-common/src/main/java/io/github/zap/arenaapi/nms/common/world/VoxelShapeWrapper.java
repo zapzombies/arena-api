@@ -1,8 +1,6 @@
 package io.github.zap.arenaapi.nms.common.world;
 
 import io.github.zap.commons.vectors.Bounds;
-import io.github.zap.commons.vectors.Direction;
-import io.github.zap.commons.vectors.Vector3D;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 
