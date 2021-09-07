@@ -43,7 +43,7 @@ class ProxyBlockCollisionProviderTest {
     void setUp() {
         worldBridge = Mockito.mock(WorldBridge.class);
         world = Mockito.mock(World.class);
-        provider = new ProxyBlockCollisionProvider(worldBridge, world, 1, 0, TimeUnit.SECONDS);
+        provider = new ProxyBlockCollisionProvider(worldBridge, world, 1);
 
         fullBlock.add(new BoundingBox(0, 0, 0, 1, 1, 1));
         tinyBlock.add(new BoundingBox(0.4, 0, 0.4, 0.6, 1, 0.6));
@@ -201,8 +201,7 @@ class ProxyBlockCollisionProviderTest {
             mockChunkViews.put(location, mockChunkView);
 
             Mockito.when(worldBridge.getChunkIfLoadedImmediately(world, x, z)).thenReturn(mockChunk);
-            Mockito.when(worldBridge.proxyView(Mockito.eq(mockChunk), ArgumentMatchers.anyInt(), ArgumentMatchers.anyLong(),
-                    ArgumentMatchers.any())).thenReturn(mockChunkView);
+            Mockito.when(worldBridge.proxyView(Mockito.same(mockChunk))).thenReturn(mockChunkView);
 
             Mockito.when(mockChunkView.position()).thenReturn(Vectors.of(x, z));
             return mockChunkView;
@@ -238,10 +237,10 @@ class ProxyBlockCollisionProviderTest {
         return mockBlockView;
     }
 
-    private void testWalkDirection(BoundingBox agentBounds, List<BlockCollisionView> collisions, Direction direction,
+    private void testWalkDirection(BoundingBox agentBounds, List<BlockCollisionView> initialCollisions, Direction direction,
                                    Vector3I origin, boolean collides, Vector3D expectedTranslation) {
         CollisionChunkView chunk = mockChunkAt(origin.x() >> 4, origin.z() >> 4);
-        Mockito.when(chunk.collisionsWith(ArgumentMatchers.any())).thenReturn(collisions).thenThrow();
+        Mockito.when(chunk.collisionsWith(ArgumentMatchers.any())).thenReturn(initialCollisions).thenThrow();
 
         BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds.clone()
                         .shift(origin.x(), origin.y(), origin.z()), direction, Vectors.asDouble(direction));

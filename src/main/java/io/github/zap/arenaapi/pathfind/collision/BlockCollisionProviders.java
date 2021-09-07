@@ -7,18 +7,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.TimeUnit;
 
 public final class BlockCollisionProviders {
-    private static final long DEFAULT_TIMEOUT_INTERVAL = 2;
-    private static final TimeUnit DEFAULT_TIMEOUT_UNIT = TimeUnit.SECONDS;
-
     public static @NotNull BlockCollisionProvider proxyAsyncProvider(@NotNull World world, int maxConcurrency) {
         return new ProxyBlockCollisionProvider(ArenaApi.getInstance().getNmsBridge().worldBridge(), world,
-                maxConcurrency, DEFAULT_TIMEOUT_INTERVAL, DEFAULT_TIMEOUT_UNIT);
-    }
-
-    public static @NotNull BlockCollisionProvider proxyAsyncProvider(@NotNull World world, int maxConcurrency,
-                                                                     long timeoutInterval, @NotNull TimeUnit timeoutUnit) {
-        return new ProxyBlockCollisionProvider(ArenaApi.getInstance().getNmsBridge().worldBridge(), world,
-                maxConcurrency, timeoutInterval, timeoutUnit);
+                maxConcurrency);
     }
 
     public static @NotNull BlockCollisionProvider snapshotAsyncProvider(@NotNull World world, int maxConcurrency,

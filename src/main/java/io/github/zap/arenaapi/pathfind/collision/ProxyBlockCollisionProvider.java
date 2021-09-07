@@ -14,17 +14,10 @@ import java.util.concurrent.TimeUnit;
 
 class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
     private final WorldBridge worldBridge;
-    private final int concurrency;
-    private final long timeoutInterval;
-    private final TimeUnit timeoutUnit;
 
-    ProxyBlockCollisionProvider(@NotNull WorldBridge worldBridge, @NotNull World world, int concurrency,
-                                long timeoutInterval, @NotNull TimeUnit timeoutUnit) {
+    ProxyBlockCollisionProvider(@NotNull WorldBridge worldBridge, @NotNull World world, int concurrency) {
         super(world, new MapMaker().weakValues().concurrencyLevel(concurrency).makeMap(), true);
         this.worldBridge = worldBridge;
-        this.concurrency = concurrency;
-        this.timeoutInterval = timeoutInterval;
-        this.timeoutUnit = timeoutUnit;
     }
 
     @Override
@@ -42,7 +35,7 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
             Chunk chunk = worldBridge.getChunkIfLoadedImmediately(world, x, z);
 
             if(chunk != null) {
-                view = worldBridge.proxyView(chunk, concurrency, timeoutInterval, timeoutUnit);
+                view = worldBridge.proxyView(chunk);
                 chunkViewMap.put(key, view);
             }
         }

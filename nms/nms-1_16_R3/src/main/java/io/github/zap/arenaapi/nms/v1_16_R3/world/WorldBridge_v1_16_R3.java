@@ -29,9 +29,8 @@ public class WorldBridge_v1_16_R3 implements WorldBridge {
     }
 
     @Override
-    public @NotNull CollisionChunkView proxyView(@NotNull Chunk chunk, int expectedConcurrency, long timeoutInterval,
-                                                 @NotNull TimeUnit timeoutUnit) {
-        return new CollisionChunkProxy_v1_16_R3(((CraftChunk)chunk).getHandle(), expectedConcurrency, timeoutInterval, timeoutUnit);
+    public @NotNull CollisionChunkView proxyView(@NotNull Chunk chunk) {
+        return new CollisionChunkProxy_v1_16_R3(((CraftChunk)chunk).getHandle());
     }
 
     @Override

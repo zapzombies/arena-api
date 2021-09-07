@@ -18,8 +18,7 @@ public interface WorldBridge {
      */
     @NotNull String getDefaultWorldName();
 
-    @NotNull CollisionChunkView proxyView(@NotNull Chunk chunk, int expectedConcurrency, long timeoutInterval,
-                                          @NotNull TimeUnit timeoutUnit);
+    @NotNull CollisionChunkView proxyView(@NotNull Chunk chunk);
 
     @NotNull CollisionChunkView snapshotView(@NotNull Chunk chunk);
 

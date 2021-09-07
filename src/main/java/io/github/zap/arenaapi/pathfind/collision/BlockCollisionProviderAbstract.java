@@ -164,7 +164,8 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     }
 
     protected long chunkKey(int x, int z) {
-        return ((long) x << 32) | z;
+        //from https://stackoverflow.com/questions/12772939/java-storing-two-ints-in-a-long
+        return (((long)x) << 32) | (z & 0xFFFFFFFFL);
     }
 
     private HitResult nearestView(Iterable<BlockCollisionView> collisions, BoundingBox agentBounds,
