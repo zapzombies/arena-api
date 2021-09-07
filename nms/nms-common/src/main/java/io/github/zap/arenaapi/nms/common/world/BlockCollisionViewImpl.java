@@ -15,9 +15,8 @@ record BlockCollisionViewImpl(int x, int y, int z, BlockData data, VoxelShapeWra
 
     @Override
     public double exactY() {
-        double collisionY = collision.boundingBox().positionDirectional(Direction.UP).minY();
-        if(Double.isFinite(collisionY)) {
-            return y + collisionY;
+        if(!collision.isEmpty()) {
+            return y + collision.boundingBox().positionDirectional(Direction.UP).minY();
         }
 
         return y;

@@ -123,9 +123,12 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         List<BlockCollisionView> collisionViews = solidsOverlapping(expandedBounds);
         removeCollidingAtAgent(agentBounds, collisionViews);
 
-        if(direction == Direction.UP || direction == Direction.DOWN || direction.isCardinal()) {
-            Direction opposite = direction.opposite();
+        if(direction.isAxisAligned()) {
+            if(collisionViews.isEmpty()) { //for N, E, S, W, U and D there is no collision if collisionViews is empty
+                return HitResult.NO_HIT;
+            }
 
+            Direction opposite = direction.opposite();
             return nearestView(collisionViews, agentBounds, direction, (shape, shapeVector) -> {
                 Bounds face = shape.collision().boundingBox().positionDirectional(opposite);
 
@@ -149,10 +152,8 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
                 Vector3D secondPoint = Vectors.add(secondLine.min(), shapeVector);
 
                 HitTestType type = collisionCheck(adjustedWidth, direction.x(), direction.z(),
-                        firstPoint.x(),
-                        firstPoint.z(),
-                        secondPoint.x(),
-                        secondPoint.z());
+                        firstPoint.x(), firstPoint.z(),
+                        secondPoint.x(), secondPoint.z());
 
                 return new HitTestResult(type, firstPoint, secondPoint);
             });

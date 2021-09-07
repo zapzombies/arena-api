@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import io.github.zap.commons.vectors.*;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * This interface provides a general template for a class which provides block state information over a limited
@@ -22,7 +21,9 @@ import java.util.function.Predicate;
  * call a method concurrently.
  */
 public interface BlockCollisionProvider {
-    record HitResult(boolean collides, BlockCollisionView nearest, Vector3D translationVector) {}
+    record HitResult(boolean collides, BlockCollisionView nearest, Vector3D translationVector) {
+        public static HitResult NO_HIT = new HitResult(false, null, null);
+    }
 
     /**
      * Returns the World object this BlockProvider is linked to.

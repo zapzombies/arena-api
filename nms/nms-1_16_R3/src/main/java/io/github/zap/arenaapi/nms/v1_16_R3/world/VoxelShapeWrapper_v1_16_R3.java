@@ -5,6 +5,7 @@ import io.github.zap.arenaapi.nms.common.world.VoxelShapeWrapper;
 import io.github.zap.commons.vectors.Bounds;
 import net.minecraft.server.v1_16_R3.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -18,8 +19,14 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
 
     VoxelShapeWrapper_v1_16_R3(VoxelShape shape) {
         this.shape = shape;
-        AxisAlignedBB bb = shape.getBoundingBox();
-        boundingBox = new Bounds(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+
+        if(!shape.isEmpty()) {
+            AxisAlignedBB bb = shape.getBoundingBox();
+            boundingBox = new Bounds(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+        }
+        else {
+            boundingBox = null;
+        }
     }
 
     private Bounds[] getShapes() {
@@ -62,7 +69,7 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
     }
 
     @Override
-    public @NotNull Bounds boundingBox() {
+    public Bounds boundingBox() {
         return boundingBox;
     }
 

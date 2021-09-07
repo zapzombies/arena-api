@@ -4,12 +4,16 @@ import io.github.zap.arenaapi.ArenaApi;
 import io.github.zap.arenaapi.pathfind.path.PathResult;
 import io.github.zap.arenaapi.pathfind.engine.PathfinderEngine;
 import io.github.zap.arenaapi.pathfind.operation.PathOperation;
+import lombok.SneakyThrows;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
+import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
 
 /**
  * Utility meant to simplify access to PathfinderEngines, particularly asynchronous ones. Prevents redundant
@@ -44,8 +48,8 @@ public class PathHandler {
                     result = null;
                     return value;
                 } catch (InterruptedException | ExecutionException exception) {
-                    ArenaApi.warning("Exception thrown when retrieving a completed PathResult:");
-                    exception.printStackTrace();
+                    engine.getPlugin().getLogger().log(Level.WARNING, "Exception thrown when retrieving a " +
+                            "completed PathResult", exception);
                 }
             }
         }

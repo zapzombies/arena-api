@@ -171,8 +171,20 @@ class ProxyBlockCollisionProviderTest {
 
     @Test
     void fullAgentMovingCardinalNoCollisionFullBlockAboveHead() {
-        BlockCollisionView blockAboveHead = mockBlockAt(0, 2, 0, fullBlock, fullBlockBounds, true);
-        testCardinalSameCollision(fullAgentBounds, List.of(blockAboveHead), false);
+        mockBlockAt(0, 2, 0, fullBlock, fullBlockBounds, false);
+        testCardinalSameCollision(fullAgentBounds, new ArrayList<>(), false);
+    }
+
+    @Test
+    void fullAgentMovingDownNoCollision() {
+        testWalkDirection(fullAgentBounds, new ArrayList<>(), Direction.DOWN, Vectors.of(0, 0, 0), false, null);
+    }
+
+    @Test
+    void fullAgentMovingDownCollisionWithFullBlock() {
+        mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, false);
+        testWalkDirection(fullAgentBounds, new ArrayList<>(), Direction.DOWN, Vectors.of(0, 1, 0),
+                false, null);
     }
 
     private void assertNoModification(BoundingBox bounds, Consumer<BoundingBox> consumer) {
@@ -199,7 +211,8 @@ class ProxyBlockCollisionProviderTest {
         return mockChunkViews.get(location);
     }
 
-    private BlockCollisionView mockBlockAt(int x, int y, int z, List<BoundingBox> voxelShapes, Bounds blockBounds, boolean shouldOverlap) {
+    private BlockCollisionView mockBlockAt(int x, int y, int z, List<BoundingBox> voxelShapes, Bounds blockBounds,
+                                           boolean overlapsAtAgent) {
         CollisionChunkView mockChunkView = mockChunkAt(x >> 4, z >> 4);
 
         VoxelShapeWrapper mockVoxelShapeWrapper = Mockito.mock(VoxelShapeWrapper.class);
@@ -215,7 +228,7 @@ class ProxyBlockCollisionProviderTest {
 
         BlockCollisionView mockBlockView = Mockito.mock(BlockCollisionView.class);
         Mockito.when(mockBlockView.collision()).thenReturn(mockVoxelShapeWrapper);
-        Mockito.when(mockBlockView.overlaps(ArgumentMatchers.any())).thenReturn(shouldOverlap);
+        Mockito.when(mockBlockView.overlaps(ArgumentMatchers.any())).thenReturn(overlapsAtAgent);
 
         Mockito.when(mockBlockView.x()).thenReturn(x);
         Mockito.when(mockBlockView.y()).thenReturn(y);
@@ -230,8 +243,8 @@ class ProxyBlockCollisionProviderTest {
         CollisionChunkView chunk = mockChunkAt(origin.x() >> 4, origin.z() >> 4);
         Mockito.when(chunk.collisionsWith(ArgumentMatchers.any())).thenReturn(collisions).thenThrow();
 
-        BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds, direction,
-                Vectors.asDouble(direction));
+        BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds.clone()
+                        .shift(origin.x(), origin.y(), origin.z()), direction, Vectors.asDouble(direction));
         Assertions.assertSame(collides, result.collides());
 
         if(expectedTranslation != null) {

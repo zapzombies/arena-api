@@ -3,6 +3,7 @@ package io.github.zap.arenaapi.nms.common.world;
 import io.github.zap.commons.vectors.Bounds;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface VoxelShapeWrapper {
     boolean isFull();
@@ -15,7 +16,7 @@ public interface VoxelShapeWrapper {
 
     @NotNull Bounds shapeAt(int index);
 
-    @NotNull Bounds boundingBox();
+    Bounds boundingBox();
 
     boolean anyBoundsMatches(@NotNull BoxPredicate predicate);
 
