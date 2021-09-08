@@ -52,6 +52,13 @@ tasks.relocate {
     dependsOn(":nms:nms-1_16_R3:build")
 }
 
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        events("skipped", "failed")
+    }
+}
 
 publishToZGpr()
-
