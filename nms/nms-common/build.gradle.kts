@@ -25,6 +25,5 @@ dependencies {
             }
         }
     }
-
     compileOnlyApi("com.comphenix.protocol:ProtocolLib:4.7.0")
 }
