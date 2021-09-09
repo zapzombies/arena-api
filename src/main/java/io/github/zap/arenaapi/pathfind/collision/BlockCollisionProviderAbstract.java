@@ -1,13 +1,14 @@
 package io.github.zap.arenaapi.pathfind.collision;
 
-import com.google.common.math.DoubleMath;
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
 import io.github.zap.arenaapi.nms.common.world.CollisionChunkView;
 import io.github.zap.arenaapi.nms.common.world.VoxelShapeWrapper;
 import io.github.zap.arenaapi.pathfind.chunk.ChunkBounds;
-import io.github.zap.arenaapi.pathfind.util.Direction;
 import io.github.zap.arenaapi.pathfind.util.ChunkBoundsIterator;
 import io.github.zap.commons.vectors.*;
+import io.github.zap.commons.vectors.Vector2I;
+import io.github.zap.commons.vectors.Vector3D;
+import io.github.zap.commons.vectors.Vectors;
 import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
@@ -18,12 +19,32 @@ import java.util.List;
 import java.util.Map;
 
 abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider {
+    private record HitTestResult(HitTestType type, Vector3D min, Vector3D max) {}
+
+    @FunctionalInterface
+    private interface ViewPredicate {
+        @NotNull HitTestResult test(BlockCollisionView block, Vector3D shapeVector);
+    }
+
+    private enum HitTestType {
+        HITS,
+        MIN_NOT_IN_FIRST,
+        MIN_IN_FIRST_MAX_IN_SECOND,
+        MIN_IN_FIRST_AND_SECOND,
+        NO_COLLISION;
+
+        private boolean hits() {
+            return this != NO_COLLISION;
+        }
+    }
+
     protected final World world;
-    protected final Map<Vector2I, CollisionChunkView> chunkViewMap;
+    protected final Map<Long, CollisionChunkView> chunkViewMap;
 
     private final boolean supportsAsync;
 
-    BlockCollisionProviderAbstract(@NotNull World world, @NotNull Map<Vector2I, CollisionChunkView> chunkViewMap, boolean supportsAsync) {
+    BlockCollisionProviderAbstract(@NotNull World world, @NotNull Map<Long, CollisionChunkView> chunkViewMap,
+                                   boolean supportsAsync) {
         this.world = world;
         this.chunkViewMap = chunkViewMap;
         this.supportsAsync = supportsAsync;
@@ -76,7 +97,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     }
 
     @Override
-    public @NotNull List<BlockCollisionView> collidingSolidsAt(@NotNull BoundingBox worldRelativeBounds) {
+    public @NotNull List<BlockCollisionView> solidsOverlapping(@NotNull BoundingBox worldRelativeBounds) {
         List<BlockCollisionView> shapes = new ArrayList<>();
         ChunkBoundsIterator iterator = new ChunkBoundsIterator(worldRelativeBounds);
 
@@ -93,87 +114,159 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     }
 
     @Override
-    public boolean collidesMovingAlong(@NotNull BoundingBox agentBounds, @NotNull Direction direction,
-                                       @NotNull Vector3D translation) {
-        BoundingBox expandedBounds = agentBounds.clone().expandDirectional(Vectors.asBukkit(translation));
+    public @NotNull HitResult collisionMovingAlong(@NotNull BoundingBox agentBounds, @NotNull Direction direction,
+                                                   @NotNull Vector3D translation) {
+        BoundingBox expandedBounds = agentBounds.clone().expandDirectional(Vectors.asBukkit(translation)).expand(-Vectors.EPSILON);
 
         double width = agentBounds.getWidthX();
-        double halfWidth = width / 2;
-        int dirFac = direction.x() * direction.z();
-        double adjustedWidth = width * ((Math.abs(direction.x()) + Math.abs(direction.z())) / 2D);
 
-        for(BlockCollisionView shape : collidingSolidsAt(expandedBounds)) {
-            VoxelShapeWrapper collision = shape.collision();
+        List<BlockCollisionView> collisionViews = solidsOverlapping(expandedBounds);
+        removeCollidingAtAgent(agentBounds, collisionViews);
 
-            //translate to a coordinate space centered on our entity
-            double x = shape.x() - agentBounds.getCenterX();
-            double y = shape.y() - agentBounds.getMinY();
-            double z = shape.z() - agentBounds.getCenterZ();
-
-            boolean collides = false;
-            for(int i = 0; i < collision.size(); i++) {
-                Bounds bounds = collision.boundsAt(i);
-
-                double minX = x + bounds.minX();
-                double minY = y + bounds.minY();
-                double minZ = z + bounds.minZ();
-
-                double maxX = x + bounds.maxX();
-                double maxY = y + bounds.maxY();
-                double maxZ = z + bounds.maxZ();
-
-                if(collidesAtEntity(minX, minY, minZ, maxX, maxY, maxZ, halfWidth, agentBounds.getHeight())) {
-                    collides = false; //skip evaluating collision for block we're in
-                    break;
-                }
-                else if(!collides) {
-                    if(direction == Direction.UP) {
-                        collides = collidesAtEntity(minX, minY, minZ, maxX, maxY, maxZ, halfWidth, expandedBounds.getHeight());
-                    }
-                    else {
-                        collides = switch (dirFac) {
-                            case -1, 0 -> collisionCheck(adjustedWidth, direction.x(), direction.z(), minX, minZ, maxX, maxZ);
-                            case 1 -> collisionCheck(adjustedWidth, direction.x(), direction.z(), maxX, minZ, minX, maxZ);
-                            default -> throw new IllegalArgumentException("dirFac was " + dirFac);
-                        };
-                    }
-                }
+        if(direction.isAxisAligned()) {
+            if(collisionViews.isEmpty()) { //for N, E, S, W, U and D there is no collision if collisionViews is empty
+                return HitResult.NO_HIT;
             }
 
-            if(collides) {
-                return true;
+            Direction opposite = direction.opposite();
+            return nearestView(collisionViews, agentBounds, direction, (shape, shapeVector) -> {
+                Bounds face = shape.collision().boundingBox().positionDirectional(opposite);
+
+                return new HitTestResult(HitTestType.HITS, Vectors.add(face.min(), shapeVector),
+                        Vectors.add(face.max(), shapeVector));
+            });
+        }
+        else if(direction.isIntercardinal()) {
+            Direction first = direction.rotateClockwise();
+            Direction second = first.opposite();
+
+            double adjustedWidth = (width * (Math.abs(direction.x()) + Math.abs(direction.z()))) / 2;
+
+            return nearestView(collisionViews, agentBounds, direction, (shape, shapeVector) -> {
+                VoxelShapeWrapper collision = shape.collision();
+
+                Bounds firstLine = collision.boundingBox().positionDirectional(first);
+                Bounds secondLine = collision.boundingBox().positionDirectional(second);
+
+                Vector3D firstPoint = Vectors.add(firstLine.min(), shapeVector);
+                Vector3D secondPoint = Vectors.add(secondLine.min(), shapeVector);
+
+                HitTestType type = collisionCheck(adjustedWidth, direction.x(), direction.z(),
+                        firstPoint.x(), firstPoint.z(),
+                        secondPoint.x(), secondPoint.z());
+
+                return new HitTestResult(type, firstPoint, secondPoint);
+            });
+        }
+        else {
+            throw new IllegalArgumentException("Direction " + direction + " not supported");
+        }
+    }
+
+    protected long chunkKey(int x, int z) {
+        //from https://stackoverflow.com/questions/12772939/java-storing-two-ints-in-a-long
+        return (((long)x) << 32) | (z & 0xFFFFFFFFL);
+    }
+
+    private HitResult nearestView(Iterable<BlockCollisionView> collisions, BoundingBox agentBounds,
+                                  Direction direction, ViewPredicate filter) {
+        double halfWidth = agentBounds.getWidthX() / 2;
+        double nearestMagnitudeSquared = Double.POSITIVE_INFINITY;
+        Vector3D nearestTranslation = null;
+        BlockCollisionView nearestCollision = null;
+        boolean collides = false;
+
+        Vector3D agentCorner = Vectors.subtract(Bounds.positionDirectional(direction, agentBounds.getMinX(),
+                agentBounds.getMinY(), agentBounds.getMinZ(), agentBounds.getMaxX(), agentBounds.getMaxY(),
+                agentBounds.getMaxZ()).min(), Vectors.of(halfWidth + agentBounds.getMinX(), 0, halfWidth + agentBounds.getMinZ()));
+
+        for(BlockCollisionView shape : collisions) {
+            Vector3D shapeVector = Vectors.of(shape.x() - agentBounds.getCenterX(),
+                    shape.y() - agentBounds.getMinY(), shape.z() - agentBounds.getCenterZ());
+
+            HitTestResult hitTestResult;
+            if((hitTestResult = filter.test(shape, shapeVector)).type().hits()) {
+                double deltaMinX = Math.abs(agentCorner.x() - hitTestResult.min.x());
+                double deltaMaxX = Math.abs(agentCorner.x() - hitTestResult.max.x());
+
+                double deltaMinY = Math.abs(agentCorner.y() - hitTestResult.min.y());
+                double deltaMaxY = Math.abs(agentCorner.y() - hitTestResult.max.y());
+
+                double deltaMinZ = Math.abs(agentCorner.z() - hitTestResult.min.z());
+                double deltaMaxZ = Math.abs(agentCorner.z() - hitTestResult.max.z());
+
+                double xComp = Math.min(deltaMinX, deltaMaxX) * direction.x();
+                double yComp = Math.min(deltaMinY, deltaMaxY) * direction.y();
+                double zComp = Math.min(deltaMinZ, deltaMaxZ) * direction.z();
+
+                double currentMagnitudeSquared = Vectors.distanceSquared(xComp, yComp, zComp, 0, 0, 0);
+
+                if(currentMagnitudeSquared < nearestMagnitudeSquared) {
+                    nearestCollision = shape;
+                    nearestTranslation = Vectors.of(xComp, yComp, zComp);
+                    nearestMagnitudeSquared = currentMagnitudeSquared;
+                    collides = true;
+                }
             }
         }
 
-        return false;
+        return new HitResult(collides, nearestCollision, nearestTranslation);
     }
 
-    private boolean collisionCheck(double width, int dirX, int dirZ, double minX, double minZ, double maxX, double maxZ) {
-        /*
-        inequalities:
-        (y-z) < w
-        (y-z) > -w
-         */
+    private void removeCollidingAtAgent(BoundingBox agentBounds, List<BlockCollisionView> hits) {
+        for(int i = hits.size() - 1; i >= 0; i--) {
+            if(hits.get(i).overlaps(agentBounds)) {
+                hits.remove(i);
+            }
+        }
+    }
 
+    /*
+    this simple algorithm determines if a given bounds, denoted by a pair of 2d points, intersects the path traced by
+    a bounding box moving in the direction denoted by the vector <dirX, dirZ>. the width of the bounding box is given
+    by adjustedWidth, whose value must be precalculated as follows:
+
+    (width * (Math.abs(dirX) + Math.abs(dirZ))) / 2
+
+    the function works by testing points (min, max) against a pair of inequalities:
+
+    First: (z * dirX) - (x * dirZ) < w
+    Second: (z * dirX) - (x * dirZ) > -w
+
+    the function follows the truth table shown below. a question mark denotes "don't cares"
+
+    minInFirst   |   minInSecond   |   maxInFirst   |   maxInSecond   |   collides
+    0                1                 0                ?                 0
+    0                1                 1                ?                 1
+    1                0                 ?                0                 0
+    1                0                 ?                1                 1  //same as #2 but inverted
+    1                1                 ?                ?                 1
+
+    some combinations of values are not possible given valid inputs, and thus they are not present in the truth table
+    and are not tested for either. for example, a point that satisfies neither of the inequalities is not possible for
+    a valid adjustedWidth parameter.
+
+    more specifically, regarding invalid input, all double parameters must be finite, and adjustedWidth must be greater
+    than 0. dirX and dirZ may be any pair of integers, including negative numbers, but they cannot both be zero (one
+    may be zero if the other is non-zero). minX, minZ, maxX, and maxZ must be finite and have an additional special
+    consideration that a vector drawn between them must NOT belong to the same or opposite quadrant as the direction
+    vector
+     */
+    private HitTestType collisionCheck(double adjustedWidth, int dirX, int dirZ, double minX, double minZ,
+                                       double maxX, double maxZ) {
         double zMinusXMin = (minZ * dirX) - (minX * dirZ);
-        if(zMinusXMin >= width) { //min not in first
-            return (maxZ * dirX) - (maxX * dirZ) < width; //return max in first
+        if(zMinusXMin >= adjustedWidth) { //!minInFirst
+            return (maxZ * dirX) - (maxX * dirZ) < adjustedWidth ? HitTestType.MIN_NOT_IN_FIRST :
+                    HitTestType.NO_COLLISION;
         }
 
-        if(zMinusXMin > -width) { //min in first && min in second
-            return true;
+        //we know minInFirst is true...
+
+        if(zMinusXMin > -adjustedWidth) { //minInFirst && minInSecond
+            return HitTestType.MIN_IN_FIRST_AND_SECOND;
         }
 
-        return (maxZ * dirX) - (maxX * dirZ) > -width; //return max in second
-    }
-
-    private boolean collidesAtEntity(double minX, double minY, double minZ, double maxX, double maxY, double maxZ,
-                                     double halfWidth, double height) {
-        return DoubleMath.fuzzyCompare(-halfWidth, maxX, Vectors.EPSILON) < 0 &&
-                DoubleMath.fuzzyCompare(halfWidth, minX, Vectors.EPSILON) > 0 &&
-                DoubleMath.fuzzyCompare(0, maxY, Vectors.EPSILON) < 0 &&
-                DoubleMath.fuzzyCompare(height, minY, Vectors.EPSILON) > 0 &&
-                DoubleMath.fuzzyCompare(-halfWidth, maxZ, Vectors.EPSILON) < 0 &&
-                DoubleMath.fuzzyCompare(halfWidth, minZ, Vectors.EPSILON) > 0;
+        return (maxZ * dirX) - (maxX * dirZ) > -adjustedWidth ? HitTestType.MIN_IN_FIRST_MAX_IN_SECOND :
+                HitTestType.NO_COLLISION; // minInFirst && !minInSecond
     }
 }

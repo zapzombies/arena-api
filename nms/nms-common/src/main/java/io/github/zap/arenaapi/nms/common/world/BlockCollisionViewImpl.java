@@ -1,5 +1,6 @@
 package io.github.zap.arenaapi.nms.common.world;
 
+import io.github.zap.commons.vectors.Direction;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
@@ -14,9 +15,8 @@ record BlockCollisionViewImpl(int x, int y, int z, BlockData data, VoxelShapeWra
 
     @Override
     public double exactY() {
-        double collisionY = collision.maxY();
-        if(Double.isFinite(collisionY)) {
-            return y + collision.maxY();
+        if(!collision.isEmpty()) {
+            return y + collision.boundingBox().positionDirectional(Direction.UP).minY();
         }
 
         return y;

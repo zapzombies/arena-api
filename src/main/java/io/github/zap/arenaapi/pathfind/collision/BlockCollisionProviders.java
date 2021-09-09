@@ -4,9 +4,12 @@ import io.github.zap.arenaapi.ArenaApi;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.TimeUnit;
+
 public final class BlockCollisionProviders {
     public static @NotNull BlockCollisionProvider proxyAsyncProvider(@NotNull World world, int maxConcurrency) {
-        return new ProxyBlockCollisionProvider(ArenaApi.getInstance().getNmsBridge().worldBridge(), world, maxConcurrency);
+        return new ProxyBlockCollisionProvider(ArenaApi.getInstance().getNmsBridge().worldBridge(), world,
+                maxConcurrency);
     }
 
     public static @NotNull BlockCollisionProvider snapshotAsyncProvider(@NotNull World world, int maxConcurrency,

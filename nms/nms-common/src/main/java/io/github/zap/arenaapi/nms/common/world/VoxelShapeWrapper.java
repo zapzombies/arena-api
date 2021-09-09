@@ -4,21 +4,7 @@ import io.github.zap.commons.vectors.Bounds;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 public interface VoxelShapeWrapper {
-    double maxX();
-
-    double minX();
-
-    double maxY();
-
-    double minY();
-
-    double maxZ();
-
-    double minZ();
-
     boolean isFull();
 
     boolean isEmpty();
@@ -27,7 +13,9 @@ public interface VoxelShapeWrapper {
 
     int size();
 
-    @NotNull Bounds boundsAt(int index);
+    @NotNull Bounds shapeAt(int index);
+
+    Bounds boundingBox();
 
     boolean anyBoundsMatches(@NotNull BoxPredicate predicate);
 
@@ -38,3 +26,4 @@ public interface VoxelShapeWrapper {
                 boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ());
     }
 }
+

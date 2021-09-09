@@ -6,7 +6,6 @@ import io.github.zap.arenaapi.pathfind.agent.PathAgent;
 import io.github.zap.arenaapi.pathfind.path.PathNode;
 import io.github.zap.arenaapi.pathfind.path.PathNodeFactory;
 import io.github.zap.arenaapi.pathfind.context.PathfinderContext;
-import io.github.zap.arenaapi.pathfind.util.Direction;
 import io.github.zap.commons.vectors.*;
 import org.jetbrains.annotations.NotNull;
 

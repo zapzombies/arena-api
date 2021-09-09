@@ -10,6 +10,8 @@ import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.TimeUnit;
+
 class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
     private final WorldBridge worldBridge;
 
@@ -26,15 +28,15 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
 
     @Override
     public @Nullable CollisionChunkView chunkAt(int x, int z) {
-        Vector2I loc = Vectors.of(x, z);
-        CollisionChunkView view = chunkViewMap.get(loc);
+        long key = chunkKey(x, z);
+        CollisionChunkView view = chunkViewMap.get(key);
 
         if(view == null) {
             Chunk chunk = worldBridge.getChunkIfLoadedImmediately(world, x, z);
 
             if(chunk != null) {
                 view = worldBridge.proxyView(chunk);
-                chunkViewMap.put(loc, view);
+                chunkViewMap.put(key, view);
             }
         }
 

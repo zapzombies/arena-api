@@ -16,7 +16,14 @@ repositories {
 
 dependencies {
     paperApi("1.16.5-R0.1-SNAPSHOT")
-    compileOnlyApi("io.github.zap:zap-commons:1.0.0")
-    // compileOnlyApi("io.github.zap:zap-commons:0.0.0-SNAPSHOT")
+    compileOnlyApi("io.github.zap:zap-commons") {
+        version {
+            require("[0.0.0+, ${(project.property("zapCommonsVersion") as String)}]")
+
+            if(project.property("preferLocal") == "true") {
+                prefer("0.0.0-SNAPSHOT")
+            }
+        }
+    }
     compileOnlyApi("com.comphenix.protocol:ProtocolLib:4.7.0")
 }

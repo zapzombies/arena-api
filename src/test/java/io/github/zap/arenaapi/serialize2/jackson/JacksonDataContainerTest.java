@@ -3,6 +3,7 @@ package io.github.zap.arenaapi.serialize2.jackson;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.zap.arenaapi.serialize2.TypeToken;
+import io.github.zap.commons.vectors.Vectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +18,6 @@ class JacksonDataContainerTest {
     private static record NestedNested(int nested_nested_integer) { }
 
     private static final ObjectMapper mapper = new ObjectMapper(); //this takes a long time to construct
-    private static final double epsilon = 0.00001; //used to compare doubles
 
     private JacksonDataContainer container;
 
@@ -50,7 +50,7 @@ class JacksonDataContainerTest {
     void testDoubleAccess() {
         Optional<Double> doubleOptional = container.getDouble("double");
         Assertions.assertTrue(doubleOptional.isPresent());
-        Assertions.assertEquals(100.420, doubleOptional.get(), epsilon);
+        Assertions.assertEquals(100.420, doubleOptional.get(), Vectors.EPSILON);
     }
 
     @Test
@@ -82,7 +82,7 @@ class JacksonDataContainerTest {
 
         int count = 0;
         for(double value : listDoubleOptional.get()) {
-            Assertions.assertEquals(0.69 + count++, value, epsilon);
+            Assertions.assertEquals(0.69 + count++, value, Vectors.EPSILON);
         }
     }
 

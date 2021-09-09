@@ -1,5 +1,6 @@
 package io.github.zap.arenaapi.nms.v1_16_R3.world;
 
+import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
 import io.github.zap.arenaapi.nms.common.world.CollisionChunkView;
 import io.github.zap.arenaapi.nms.common.world.VoxelShapeWrapper;
 import io.github.zap.arenaapi.nms.common.world.WorldBridge;
@@ -14,6 +15,8 @@ import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_16_R3.block.CraftBlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.TimeUnit;
 
 public class WorldBridge_v1_16_R3 implements WorldBridge {
     public static final WorldBridge_v1_16_R3 INSTANCE = new WorldBridge_v1_16_R3();
@@ -42,10 +45,11 @@ public class WorldBridge_v1_16_R3 implements WorldBridge {
     }
 
     @Override
-    public @NotNull VoxelShapeWrapper collisionShapeFor(@NotNull Block block) {
-        return new VoxelShapeWrapper_v1_16_R3(((CraftBlockState)block.getState()).getHandle()
-                .getCollisionShape(((CraftChunk)block.getChunk()).getHandle(),
-                new BlockPosition(block.getX(), block.getY(), block.getZ())));
+    public @NotNull BlockCollisionView collisionFor(@NotNull Block block) {
+        return BlockCollisionView.from(block.getX(), block.getY(), block.getZ(), block.getBlockData(),
+                new VoxelShapeWrapper_v1_16_R3(((CraftBlockState)block.getState()).getHandle()
+                        .getCollisionShape(((CraftChunk)block.getChunk()).getHandle(),
+                                new BlockPosition(block.getX(), block.getY(), block.getZ()))));
     }
 
     @Override

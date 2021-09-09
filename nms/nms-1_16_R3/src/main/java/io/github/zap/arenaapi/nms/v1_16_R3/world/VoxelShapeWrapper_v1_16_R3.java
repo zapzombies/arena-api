@@ -4,63 +4,43 @@ import io.github.zap.arenaapi.nms.common.world.BoxPredicate;
 import io.github.zap.arenaapi.nms.common.world.VoxelShapeWrapper;
 import io.github.zap.commons.vectors.Bounds;
 import net.minecraft.server.v1_16_R3.*;
-import org.bukkit.craftbukkit.v1_16_R3.scheduler.CraftScheduler;
-import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
     public static final VoxelShapeWrapper FULL = new VoxelShapeWrapper_v1_16_R3(VoxelShapes.fullCube());
     public static final VoxelShapeWrapper EMPTY = new VoxelShapeWrapper_v1_16_R3(VoxelShapes.empty());
 
     private final VoxelShape shape;
-    private final Bounds[] bounds;
+    private final Bounds boundingBox;
+    private Bounds[] shapes = null;
 
     VoxelShapeWrapper_v1_16_R3(VoxelShape shape) {
         this.shape = shape;
 
-        List<AxisAlignedBB> aabbs = shape.d();
-        bounds = new Bounds[aabbs.size()];
-
-        int i = 0;
-        for(AxisAlignedBB bb : aabbs) {
-            bounds[i++] = new Bounds(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY,bb.maxZ);
+        if(!shape.isEmpty()) {
+            AxisAlignedBB bb = shape.getBoundingBox();
+            boundingBox = new Bounds(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+        }
+        else {
+            boundingBox = null;
         }
     }
 
-    @Override
-    public double maxX() {
-        return shape.c(EnumDirection.EnumAxis.X);
-    }
+    private Bounds[] getShapes() {
+        if(shapes == null) {
+            List<AxisAlignedBB> aabbs = shape.d();
+            shapes = new Bounds[aabbs.size()];
 
-    @Override
-    public double minX() {
-        return shape.b(EnumDirection.EnumAxis.X);
-    }
+            int i = 0;
+            for(AxisAlignedBB bb : aabbs) {
+                shapes[i++] = new Bounds(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY,bb.maxZ);
+            }
+        }
 
-    @Override
-    public double maxY() {
-        return shape.c(EnumDirection.EnumAxis.Y);
-    }
-
-    @Override
-    public double minY() {
-        return shape.b(EnumDirection.EnumAxis.Y);
-    }
-
-    @Override
-    public double maxZ() {
-        return shape.c(EnumDirection.EnumAxis.Z);
-    }
-
-    @Override
-    public double minZ() {
-        return shape.b(EnumDirection.EnumAxis.Z);
+        return shapes;
     }
 
     @Override
@@ -80,17 +60,22 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
 
     @Override
     public int size() {
-        return bounds.length;
+        return getShapes().length;
     }
 
     @Override
-    public @NotNull Bounds boundsAt(int index) {
-        return bounds[index];
+    public @NotNull Bounds shapeAt(int index) {
+        return getShapes()[index];
+    }
+
+    @Override
+    public Bounds boundingBox() {
+        return boundingBox;
     }
 
     @Override
     public boolean anyBoundsMatches(@NotNull BoxPredicate predicate) {
-        for(Bounds bounds : bounds) {
+        for(Bounds bounds : getShapes()) {
             if(predicate.test(bounds.minX(), bounds.minY(), bounds.minZ(), bounds.maxX(), bounds.maxY(), bounds.maxZ())) {
                 return true;
             }
@@ -101,16 +86,12 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
 
     @Override
     public boolean collidesWith(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        for(Bounds bound : bounds) {
+        for(Bounds bound : getShapes()) {
             if(bound.overlaps(minX, minY, minZ, maxX, maxY, maxZ)) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    public @NotNull VoxelShape getShape() {
-        return shape;
     }
 }
