@@ -1,9 +1,7 @@
 package io.github.zap.arenaapi.util;
 
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
@@ -31,7 +29,6 @@ public class ArraySegment<T> implements Iterable<T> {
     private final T[] array;
     private final int offset;
 
-    @Getter
     private final int length;
 
     /**
@@ -67,7 +64,7 @@ public class ArraySegment<T> implements Iterable<T> {
 
     /**
      * Creates an ArraySegment encompassing the entire array.
-     * @param array The array to effectively wrap
+     * @param array The array to wrap
      */
     public ArraySegment(T[] array) {
         this(array, array.length, 0);
@@ -77,6 +74,14 @@ public class ArraySegment<T> implements Iterable<T> {
     @Override
     public Iterator<T> iterator() {
         return new SegmentIterator();
+    }
+
+    /**
+     * Returns the length of this ArraySegment
+     * @return the length of this ArraySegment
+     */
+    public int getLength() {
+        return length;
     }
 
     /**
@@ -117,7 +122,8 @@ public class ArraySegment<T> implements Iterable<T> {
     }
 
     /**
-     * Wrapper for System.arraycopy that copies this ArraySegment's values to another array.
+     * Wrapper for {@link System#arraycopy(Object, int, Object, int, int)} that copies this ArraySegment's values to
+     * another array.
      * @param offset The offset relative to the start of this ArraySegment
      * @param dest The destination array object
      * @param destOffset The offset of the destination array

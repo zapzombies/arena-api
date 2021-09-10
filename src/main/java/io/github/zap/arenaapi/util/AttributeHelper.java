@@ -10,7 +10,6 @@ import java.util.Optional;
  * Utils for bukkit attributes
  */
 public class AttributeHelper {
-
     /**
      * Gets a modifier on an AttributeInstance
      * @param instance The AttributeInstance to search on
@@ -20,5 +19,4 @@ public class AttributeHelper {
     public static Optional<AttributeModifier> getModifier(@NotNull AttributeInstance instance, @NotNull String attributeName) {
         return instance.getModifiers().stream().filter(attributeModifier -> attributeModifier.getName().equals(attributeName)).findAny();
     }
-
 }

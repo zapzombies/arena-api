@@ -1,48 +1,63 @@
 package io.github.zap.arenaapi.util;
 
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.metadata.Metadatable;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class MetadataHelper {
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
+/**
+ * Utility class which provides several static methods for accessing metadata from Bukkit {@link Metadatable} objects.
+ */
+public final class MetadataHelper {
     /**
-     * Returns the named metadata for the specific entity, belonging to the specific plugin.
-     * @param target The object for which to retrieve metadata
-     * @param plugin The plugin to which the metadata belongs
-     * @param metadataName The name of the metadata to retrieve
-     * @return The metadata, or null if it could not be found or there was a type mismatch.
+     * Obtains the {@link MetadataValue} object associated with the given plugin and name, on the given
+     * {@link Metadatable} instance.
+     * @param target The Metadatable object to search for metadata on
+     * @param plugin The plugin to which the metadata must belong
+     * @param metadataName The name of the metadata
+     * @return An {@link Optional} which may contain a MetadataValue. If no metadata could be found under the specified
+     * name, that also belongs to the given plugin, the Optional will be empty
      */
-    public static @Nullable MetadataValue getMetadataFor(@NotNull Metadatable target, @NotNull Plugin plugin,
-                                                         @NotNull String metadataName) {
+    public static @NotNull Optional<MetadataValue> getMetadataValue(@NotNull Metadatable target, @Nullable Plugin plugin,
+                                                                       @NotNull String metadataName) {
         for(MetadataValue value : target.getMetadata(metadataName)) {
             if(value.getOwningPlugin() == plugin) {
-                return value;
+                return Optional.of(value);
             }
         }
 
-        return null;
-    }
-
-    public static MetadataEntry getMetadataEntryFor(@NotNull Metadatable target, @NotNull Plugin plugin, @NotNull String metadataName) {
-        return new MetadataEntry(plugin, metadataName, getMetadataFor(target, plugin, metadataName));
+        return Optional.empty();
     }
 
     /**
-     * Sets metadata on the given target, with the given name, for the given plugin. If the plugin already has metadata
-     * with that name associated with it, the value is replaced.
-     * @param target The target to set metadata for
+     * Obtains the metadata instance (i.e. the object MetadataValue returns when its value() method is called) after
+     * obtaining a MetadataValue instance as per {@link MetadataHelper#getMetadataValue(Metadatable, Plugin, String)}.
+     * Assuming the MetadataValue is present, an unchecked cast will be performed on its underlying object. If the
+     * MetadataValue object is <i>not</i> present, a {@link NoSuchElementException} will be thrown. This is necessary
+     * to distinguish between null values for present metadata and metadata that is not present.
+     * @param target The Metadatable object to search for metadata on
+     * @param plugin The plugin to which the metadata must belong
      * @param metadataName The name of the metadata
-     * @param plugin The plugin owning the metadata
-     * @param value The object used as metadata
+     * @param <T> The instance type, to which the underlying value will be cast
+     * @return The MetadataValue's value() object, after casting to T, which may be null if a null value was stored
+     * @throws NoSuchElementException if no MetadataValue exists; see
+     * {@link MetadataHelper#getMetadataValue(Metadatable, Plugin, String)}
      */
-    public static void setMetadataFor(@NotNull Metadatable target, @NotNull String metadataName, @NotNull Plugin plugin, @Nullable Object value) {
-        target.setMetadata(metadataName, new FixedMetadataValue(plugin, value));
-    }
+    public static <T> T getMetadataInstance(@NotNull Metadatable target, @Nullable Plugin plugin,
+                                            @NotNull String metadataName) {
+        Optional<MetadataValue> valueOptional = getMetadataValue(target, plugin, metadataName);
 
-    public static void setMetadataFor(@NotNull Metadatable target, @NotNull MetadataEntry entry) {
-        target.setMetadata(entry.getMetadataName(), new FixedMetadataValue(entry.getOwningPlugin(), entry.getMetadataValue()));
+        if(valueOptional.isPresent()) {
+            MetadataValue value = valueOptional.get();
+            //noinspection unchecked
+            return (T) value.value();
+        }
+
+        throw new NoSuchElementException("no metadata found named '" + metadataName + "' under plugin '" +
+                (plugin == null ? "null" : plugin.getName()) + "' for Metadatable '" + target + "'");
     }
 }

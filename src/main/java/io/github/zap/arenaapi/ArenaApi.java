@@ -50,22 +50,11 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public final class ArenaApi extends JavaPlugin implements Listener {
-    @Getter
     private static ArenaApi instance;
-
-    @Getter
     private ArenaNMSBridge nmsBridge;
-
-    @Getter
     private PartyPlusPlus partyPlusPlus;
-
-    @Getter
     private ProtocolLib protocolLib;
-
-    @Getter
     private SimpleModule module;
-
-    @Getter
     private ObjectMapper mapper;
 
     private final Map<String, ArenaManager<?>> arenaManagers = new HashMap<>();
@@ -100,6 +89,30 @@ public final class ArenaApi extends JavaPlugin implements Listener {
         }
 
         info("Disabled successfully.");
+    }
+
+    public @NotNull ArenaApi getInstance() {
+        return instance;
+    }
+
+    public @NotNull ArenaNMSBridge getNmsBridge() {
+        return nmsBridge;
+    }
+
+    public @NotNull PartyPlusPlus getPartyPlusPlus() {
+        return partyPlusPlus;
+    }
+
+    public @NotNull ProtocolLib getProtocolLib() {
+        return protocolLib;
+    }
+
+    public @NotNull SimpleModule getJacksonModule() {
+        return module;
+    }
+
+    public @NotNull ObjectMapper getObjectMapper() {
+        return mapper;
     }
 
     private void initBridge() throws LoadFailureException {
