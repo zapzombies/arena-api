@@ -30,7 +30,7 @@ public class PathHandler {
         this.engine = engine;
     }
 
-    public void queueOperation(@NotNull PathOperation operation, @NotNull World world) {
+    public void giveOperation(@NotNull PathOperation operation, @NotNull World world) {
         if(result == null) {
             result = engine.giveOperation(operation, world);
         }
@@ -42,13 +42,13 @@ public class PathHandler {
                 result = null;
                 return null;
             }
-            else{
+            else if(result.isDone()) {
                 try {
                     PathResult value = result.get();
                     result = null;
                     return value;
                 } catch (InterruptedException | ExecutionException exception) {
-                    engine.getPlugin().getLogger().log(Level.WARNING, "Exception thrown when retrieving a " +
+                    engine.getPlugin().getLogger().log(Level.WARNING, "exception thrown when retrieving a " +
                             "completed PathResult", exception);
                 }
             }

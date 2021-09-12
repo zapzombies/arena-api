@@ -5,6 +5,7 @@ import io.github.zap.arenaapi.nms.common.pathfind.MobNavigator;
 import io.github.zap.arenaapi.nms.common.pathfind.PathEntityWrapper;
 import io.github.zap.commons.vectors.Vectors;
 import net.minecraft.server.v1_16_R3.*;
+import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Bukkit;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 
 public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     private PathEntityWrapper_v1_16_R3 currentPath;
+    private boolean shouldRecalculate;
 
     public MobNavigator_v1_16_R3(EntityInsentient entityinsentient, World world) {
         super(entityinsentient, world);
@@ -65,6 +67,11 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     @Override
     public @Nullable PathEntityWrapper currentPath() {
         return currentPath;
+    }
+
+    @Override
+    public boolean shouldRecalculate() {
+        return i();
     }
 
     @Override
@@ -144,14 +151,6 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
         super.a(d0);
     }
 
-    @Override
-    public boolean i() {
-        return false;
-    }
-
-    @Override
-    public void j() { }
-
     @Nullable
     @Override
     public PathEntity a(Stream<BlockPosition> stream, int i) {
@@ -225,7 +224,7 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
 
     @Override
     public PathfinderAbstract q() {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
@@ -237,9 +236,7 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     }
 
     @Override
-    public void b(BlockPosition blockposition) {
-        System.out.println("b(BlockPosition pos) called with " + blockposition);
-    }
+    public void b(BlockPosition blockposition) {}
 
     @Override
     protected void D_() { }

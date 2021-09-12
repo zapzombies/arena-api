@@ -7,4 +7,6 @@ public interface MobNavigator {
     void navigateAlongPath(@NotNull PathEntityWrapper pathEntityWrapper, double speed);
 
     @Nullable PathEntityWrapper currentPath();
+
+    boolean shouldRecalculate();
 }
