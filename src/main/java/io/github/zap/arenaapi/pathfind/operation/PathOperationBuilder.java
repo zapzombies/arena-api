@@ -80,6 +80,16 @@ public class PathOperationBuilder {
         return this;
     }
 
+    public @NotNull PathOperationBuilder withAversion(@NotNull AversionCalculator aversionCalculator) {
+        this.aversionCalculator = aversionCalculator;
+        return this;
+    }
+
+    public @NotNull PathOperationBuilder withSuccessCondition(@NotNull SuccessCondition successCondition) {
+        this.successCondition = successCondition;
+        return this;
+    }
+
     public @NotNull PathOperationBuilder withExplorer(@Nullable NodeExplorer nodeExplorer) {
         this.nodeExplorer = nodeExplorer;
         return this;

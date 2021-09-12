@@ -14,13 +14,15 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
+    private PathEntityWrapper_v1_16_R3 currentPath;
+
     public MobNavigator_v1_16_R3(EntityInsentient entityinsentient, World world) {
         super(entityinsentient, world);
     }
 
     @Override
     public void navigateAlongPath(@NotNull PathEntityWrapper pathEntityWrapper, double speed) {
-        PathEntity newPath = ((PathEntityWrapper_v1_16_R3)pathEntityWrapper).pathEntity();
+        PathEntity newPath = (currentPath = ((PathEntityWrapper_v1_16_R3)pathEntityWrapper)).pathEntity();
 
         Vec3D currentPos = getEntity().getPositionVector();
 
@@ -29,7 +31,7 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
         int entityZ = NumberConversions.floor(currentPos.z);
 
         for(int i = 0; i < newPath.e(); i++) {
-            PathPoint sample = newPath.a(i); //(pr)
+            PathPoint sample = newPath.a(i);
 
             double distanceToSampleSquared = Vectors.distanceSquared(entityX, entityY, entityZ,
                     sample.getX(), sample.getY(), sample.getZ());
@@ -56,6 +58,11 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
         }
 
         a((PathEntity)null, speed);
+    }
+
+    @Override
+    public @Nullable PathEntityWrapper currentPath() {
+        return currentPath;
     }
 
     @Override

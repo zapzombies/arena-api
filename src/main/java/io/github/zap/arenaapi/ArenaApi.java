@@ -15,7 +15,8 @@ import io.github.zap.arenaapi.game.arena.JoinInformation;
 import io.github.zap.arenaapi.nms.common.ArenaNMSBridge;
 import io.github.zap.arenaapi.nms.v1_16_R3.ArenaNMSBridge_v1_16_R3;
 import io.github.zap.arenaapi.serialize.*;
-import io.github.zap.party.PartyPlusPlus;
+import io.github.zap.party.Party;
+import io.github.zap.party.plugin.PartyPlugin;
 import lombok.Getter;
 import net.kyori.adventure.sound.Sound;
 import org.apache.commons.lang3.Validate;
@@ -52,7 +53,7 @@ import java.util.logging.Level;
 public final class ArenaApi extends JavaPlugin implements Listener {
     private static ArenaApi instance;
     private ArenaNMSBridge nmsBridge;
-    private PartyPlusPlus partyPlusPlus;
+    private PartyPlugin partyPlusPlus;
     private ProtocolLib protocolLib;
     private SimpleModule module;
     private ObjectMapper mapper;
@@ -91,7 +92,7 @@ public final class ArenaApi extends JavaPlugin implements Listener {
         info("Disabled successfully.");
     }
 
-    public @NotNull ArenaApi getInstance() {
+    public static @NotNull ArenaApi getInstance() {
         return instance;
     }
 
@@ -99,7 +100,7 @@ public final class ArenaApi extends JavaPlugin implements Listener {
         return nmsBridge;
     }
 
-    public @NotNull PartyPlusPlus getPartyPlusPlus() {
+    public @NotNull PartyPlugin getPartyPlusPlus() {
         return partyPlusPlus;
     }
 
