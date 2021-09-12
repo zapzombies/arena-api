@@ -9,6 +9,7 @@ import io.github.zap.arenaapi.nms.v1_16_R3.pathfind.PathEntityWrapper_v1_16_R3;
 import io.github.zap.arenaapi.nms.v1_16_R3.pathfind.PathPointWrapper_v1_16_R3;
 import io.github.zap.commons.vectors.Vector3I;
 import net.minecraft.server.v1_16_R3.*;
+import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.craftbukkit.v1_16_R3.attribute.CraftAttributeMap;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftEntity;
@@ -19,29 +20,14 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.logging.Level;
 
 public class EntityBridge_v1_16_R3 implements EntityBridge {
     public static final EntityBridge_v1_16_R3 INSTANCE = new EntityBridge_v1_16_R3();
-    private static final Field navigator;
-
-    static {
-        Field nav;
-        try {
-            nav = EntityInsentient.class.getDeclaredField("navigation");
-            nav.setAccessible(true);
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-            nav = null;
-        }
-
-        navigator = nav;
-    }
 
     private EntityBridge_v1_16_R3() { }
 
@@ -81,18 +67,29 @@ public class EntityBridge_v1_16_R3 implements EntityBridge {
         return new PathPointWrapper_v1_16_R3(pathPoint);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public @NotNull MobNavigator overrideNavigatorFor(@NotNull Mob mob) throws IllegalAccessException {
+    public @NotNull MobNavigator overrideNavigatorFor(@NotNull Mob mob) throws IllegalAccessException, NoSuchFieldException {
+        Field entityNavigationField = EntityInsentient.class.getDeclaredField("navigation");
         EntityInsentient entityInsentient = ((CraftMob)mob).getHandle();
-        Navigation navigation = (Navigation) navigator.get(entityInsentient);
+        NavigationAbstract navigation = (NavigationAbstract) entityNavigationField.get(entityInsentient);
 
+        //entity was previously overridden
         if(navigation instanceof MobNavigator_v1_16_R3 mobNavigator) {
             return mobNavigator;
         }
         else {
+            Field worldNavigatorsField = WorldServer.class.getDeclaredField("navigators");
+
             MobNavigator_v1_16_R3 customNavigator = new MobNavigator_v1_16_R3(entityInsentient,
                     entityInsentient.getWorld());
-            navigator.set(entityInsentient, customNavigator);
+
+            Set<NavigationAbstract> navigators = (Set<NavigationAbstract>)worldNavigatorsField.get(entityInsentient.getWorld());
+            navigators.remove(entityInsentient.getNavigation());
+
+            entityNavigationField.set(entityInsentient, customNavigator);
+            navigators.add(customNavigator);
+
             return customNavigator;
         }
     }

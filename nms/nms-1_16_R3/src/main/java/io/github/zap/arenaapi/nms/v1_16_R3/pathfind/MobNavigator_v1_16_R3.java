@@ -5,12 +5,14 @@ import io.github.zap.arenaapi.nms.common.pathfind.MobNavigator;
 import io.github.zap.arenaapi.nms.common.pathfind.PathEntityWrapper;
 import io.github.zap.commons.vectors.Vectors;
 import net.minecraft.server.v1_16_R3.*;
+import org.bukkit.Bukkit;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.stream.Stream;
 
 public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
@@ -235,7 +237,9 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     }
 
     @Override
-    public void b(BlockPosition blockposition) { }
+    public void b(BlockPosition blockposition) {
+        System.out.println("b(BlockPosition pos) called with " + blockposition);
+    }
 
     @Override
     protected void D_() { }

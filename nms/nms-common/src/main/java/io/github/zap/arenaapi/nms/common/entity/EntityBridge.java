@@ -10,6 +10,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Random;
@@ -43,7 +44,7 @@ public interface EntityBridge {
 
     @NotNull PathPointWrapper makePathPoint(@NotNull Vector3I blockLocation);
 
-    @NotNull MobNavigator overrideNavigatorFor(Mob mob) throws NoSuchFieldException, IllegalAccessException;
+    @Nullable MobNavigator overrideNavigatorFor(Mob mob) throws NoSuchFieldException, IllegalAccessException;
 
     /**
      * Calculates the entity's distance to a location based on its NMS calculation
