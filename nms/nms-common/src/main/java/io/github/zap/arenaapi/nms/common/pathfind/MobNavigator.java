@@ -9,4 +9,6 @@ public interface MobNavigator {
     @Nullable PathEntityWrapper currentPath();
 
     boolean shouldRecalculate();
+
+    boolean isIdle();
 }

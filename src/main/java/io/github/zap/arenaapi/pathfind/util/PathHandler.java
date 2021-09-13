@@ -56,4 +56,12 @@ public class PathHandler {
 
         return null;
     }
+
+    public boolean isRunning() {
+        if(result != null) {
+            return !result.isDone();
+        }
+
+        return false;
+    }
 }

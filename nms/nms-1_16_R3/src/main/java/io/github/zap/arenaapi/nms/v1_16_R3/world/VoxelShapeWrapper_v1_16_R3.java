@@ -15,7 +15,7 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
 
     private final VoxelShape shape;
     private final Bounds boundingBox;
-    private Bounds[] shapes = null;
+    private final Bounds[] shapes;
 
     VoxelShapeWrapper_v1_16_R3(VoxelShape shape) {
         this.shape = shape;
@@ -23,24 +23,19 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
         if(!shape.isEmpty()) {
             AxisAlignedBB bb = shape.getBoundingBox();
             boundingBox = new Bounds(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
-        }
-        else {
-            boundingBox = null;
-        }
-    }
 
-    private Bounds[] getShapes() {
-        if(shapes == null) {
             List<AxisAlignedBB> aabbs = shape.d();
             shapes = new Bounds[aabbs.size()];
 
             int i = 0;
-            for(AxisAlignedBB bb : aabbs) {
-                shapes[i++] = new Bounds(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY,bb.maxZ);
+            for(AxisAlignedBB bounds : aabbs) {
+                shapes[i++] = new Bounds(bounds.minX, bounds.minY, bounds.minZ, bounds.maxX, bounds.maxY, bounds.maxZ);
             }
         }
-
-        return shapes;
+        else {
+            boundingBox = null;
+            shapes = new Bounds[0];
+        }
     }
 
     @Override
@@ -60,12 +55,12 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
 
     @Override
     public int size() {
-        return getShapes().length;
+        return shapes.length;
     }
 
     @Override
     public @NotNull Bounds shapeAt(int index) {
-        return getShapes()[index];
+        return shapes[index];
     }
 
     @Override
@@ -75,7 +70,7 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
 
     @Override
     public boolean anyBoundsMatches(@NotNull BoxPredicate predicate) {
-        for(Bounds bounds : getShapes()) {
+        for(Bounds bounds : shapes) {
             if(predicate.test(bounds.minX(), bounds.minY(), bounds.minZ(), bounds.maxX(), bounds.maxY(), bounds.maxZ())) {
                 return true;
             }
@@ -86,7 +81,7 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
 
     @Override
     public boolean collidesWith(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        for(Bounds bound : getShapes()) {
+        for(Bounds bound : shapes) {
             if(bound.overlaps(minX, minY, minZ, maxX, maxY, maxZ)) {
                 return true;
             }

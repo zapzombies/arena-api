@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 
 public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     private PathEntityWrapper_v1_16_R3 currentPath;
-    private boolean shouldRecalculate;
 
     public MobNavigator_v1_16_R3(EntityInsentient entityinsentient, World world) {
         super(entityinsentient, world);
@@ -72,6 +71,11 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     @Override
     public boolean shouldRecalculate() {
         return i();
+    }
+
+    @Override
+    public boolean isIdle() {
+        return m();
     }
 
     @Override
@@ -224,7 +228,7 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
 
     @Override
     public PathfinderAbstract q() {
-        throw new NotImplementedException();
+        return null;
     }
 
     @Override
@@ -234,9 +238,6 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     public boolean r() {
         return false;
     }
-
-    @Override
-    public void b(BlockPosition blockposition) {}
 
     @Override
     protected void D_() { }
