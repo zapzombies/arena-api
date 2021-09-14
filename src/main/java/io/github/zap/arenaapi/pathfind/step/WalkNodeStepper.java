@@ -52,8 +52,8 @@ class WalkNodeStepper implements NodeStepper {
                 double deltaY = seekResult.y() - agentBounds.getMinY();
 
                 if(!collisionProvider.collisionMovingAlong(adjustedBounds, Direction.UP, Vectors.of(0, deltaY, 0)).collides() &&
-                        !collisionProvider.collisionMovingAlong(agentBounds.clone().shift(0, deltaY, 0),
-                                direction, translation).collides()) {
+                        !collisionProvider.collisionMovingAlong(adjustedBounds.shift(0, deltaY, 0),
+                                direction, Vectors.subtract(translation, shiftVector)).collides()) {
                     return Vectors.asIntFloor(seekResult);
                 }
             }
