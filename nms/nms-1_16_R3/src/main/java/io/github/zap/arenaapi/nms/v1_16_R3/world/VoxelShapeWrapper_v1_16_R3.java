@@ -17,7 +17,7 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
     private final Bounds boundingBox;
     private final Bounds[] shapes;
 
-    VoxelShapeWrapper_v1_16_R3(VoxelShape shape) {
+    VoxelShapeWrapper_v1_16_R3(@NotNull VoxelShape shape) {
         this.shape = shape;
 
         if(!shape.isEmpty()) {

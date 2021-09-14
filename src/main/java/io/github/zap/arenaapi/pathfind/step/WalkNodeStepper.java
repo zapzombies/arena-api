@@ -33,6 +33,7 @@ class WalkNodeStepper implements NodeStepper {
 
     private Vector3I doStep(BlockCollisionProvider collisionProvider, PathAgent agent, Vector3D position, Direction direction) {
         Vector3D translation = computeTranslation(position, direction);
+
         BoundingBox agentBounds = getAgentBounds(agent, position);
         BoundingBox agentBoundsAtTargetNode = agentBounds.clone().shift(translation.x(), translation.y(), translation.z());
 
@@ -46,14 +47,12 @@ class WalkNodeStepper implements NodeStepper {
             Vector3D seekResult = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode.clone(), true);
             Vector3D shiftVector = jumpTestResult.translationVector();
 
-            //agentBoundsAtTargetNode now shifted to the very edge of the nearest colliding block (not overlapping it)
-            agentBoundsAtTargetNode.shift(shiftVector.x(), shiftVector.y(), shiftVector.z());
-
             if(seekResult != null) {
+                BoundingBox adjustedBounds = agentBounds.clone().shift(shiftVector.x(), shiftVector.y(), shiftVector.z());
                 double deltaY = seekResult.y() - agentBounds.getMinY();
 
-                if(!collisionProvider.collisionMovingAlong(agentBoundsAtTargetNode, Direction.UP, Vectors.of(0, deltaY, 0)).collides() &&
-                        !collisionProvider.collisionMovingAlong(agentBoundsAtTargetNode.clone().shift(0, deltaY, 0),
+                if(!collisionProvider.collisionMovingAlong(adjustedBounds, Direction.UP, Vectors.of(0, deltaY, 0)).collides() &&
+                        !collisionProvider.collisionMovingAlong(agentBounds.clone().shift(0, deltaY, 0),
                                 direction, translation).collides()) {
                     return Vectors.asIntFloor(seekResult);
                 }
@@ -125,7 +124,7 @@ class WalkNodeStepper implements NodeStepper {
         return cachedAgentBounds;
     }
 
-    private BlockCollisionView selectHighest(Collection<BlockCollisionView> collisions) {
+    private BlockCollisionView selectHighest(Iterable<BlockCollisionView> collisions) {
         double largestY = Double.MIN_VALUE;
         BlockCollisionView highestBlock = null;
 
