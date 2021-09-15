@@ -61,7 +61,7 @@ class WalkNodeStepper implements NodeStepper {
         else {
             Vector3D result = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode, false);
 
-            if(result != null) {
+            if(result != null && !Vectors.fuzzyEquals(result, position)) {
                 return Vectors.asIntFloor(result);
             }
         }

@@ -2,7 +2,7 @@ import io.github.zap.build.gradle.convention.*
 
 // Uncomment to use local maven version - help local testing faster
 plugins {
-    id("io.github.zap.build.gradle.convention.shadow-mc-plugin") version "1.0.0"
+    id("io.github.zap.build.gradle.convention.shadow-mc-plugin") version "1.1.0"
 }
 
 description = "arena-api"
@@ -24,15 +24,7 @@ dependencies {
     }
     shade(project(":nms:nms-1_16_R3"))
 
-    shade("io.github.zap:zap-commons") {
-        version {
-            require("[0.0.0+, ${(project.property("zapCommonsVersion") as String)}]")
-
-            if(project.property("preferLocal") == "true") {
-                prefer("0.0.0-SNAPSHOT")
-            }
-        }
-    }
+    shade("io.github.zap:zap-commons:1.0.0-SNAPSHOT-1631102507", qs())
 
     paperApi("1.16.5-R0.1-SNAPSHOT")
 
@@ -41,20 +33,12 @@ dependencies {
     }
     implementation("com.github.Steanky:RegularCommands:master-SNAPSHOT")
 
-    relocate("com.fasterxml.jackson.core:jackson-core:${project.property("jacksonVersion")}")
-    relocate("com.fasterxml.jackson.core:jackson-databind:${project.property("jacksonVersion")}")
-    relocate("com.fasterxml.jackson.core:jackson-annotations:${project.property("jacksonVersion")}")
-    relocate("org.apache.commons:commons-lang3:${project.property("commonsLang3Version")}")
+    relocate("com.fasterxml.jackson.core:jackson-core:2.12.3")
+    relocate("com.fasterxml.jackson.core:jackson-databind:2.12.3")
+    relocate("com.fasterxml.jackson.core:jackson-annotations:2.12.3")
+    relocate("org.apache.commons:commons-lang3:3.12.0")
 
-    bukkitPlugin("io.github.zap:zap-party") {
-        version {
-            require("[0.0.0+, ${(project.property("zapPartyVersion") as String)}]")
-
-            if(project.property("preferLocal") == "true") {
-                prefer("0.0.0.SNAPSHOT")
-            }
-        }
-    }
+    bukkitPlugin("io.github.zap:zap-party:1.0.0-SNAPSHOT-1630956414", qs())
     bukkitPlugin("com.comphenix.protocol:ProtocolLib:4.7.0")
 
     compileOnly("org.projectlombok:lombok:1.18.20")
@@ -62,13 +46,11 @@ dependencies {
 }
 
 tasks.relocate {
-    dependsOn(":nms:nms-common:build")
-    dependsOn(":nms:nms-1_16_R3:build")
+    dependsOn(":nms:nms-common:build", ":nms:nms-1_16_R3:build")
 }
 
 tasks.test {
-    dependsOn(":nms:nms-common:build")
-    dependsOn(":nms:nms-1_16_R3:build")
+    dependsOn(":nms:nms-common:build", ":nms:nms-1_16_R3:build")
 
     testLogging {
         showStandardStreams = true
