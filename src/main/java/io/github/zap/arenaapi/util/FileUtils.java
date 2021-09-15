@@ -1,5 +1,7 @@
 package io.github.zap.arenaapi.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.util.function.Consumer;
 
@@ -9,7 +11,7 @@ public final class FileUtils {
      * @param directory The directory to iterate through
      * @param consumer The consumer to use
      */
-    public static void forEachFile(File directory, Consumer<File> consumer) {
+    public static void forEachFile(@NotNull File directory, @NotNull Consumer<File> consumer) {
         File[] files = directory.listFiles();
 
         if(files != null) {

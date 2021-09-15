@@ -5,22 +5,27 @@ import io.github.zap.arenaapi.nms.common.pathfind.MobNavigator;
 import io.github.zap.arenaapi.nms.common.pathfind.PathEntityWrapper;
 import io.github.zap.commons.vectors.Vectors;
 import net.minecraft.server.v1_16_R3.*;
+import org.apache.commons.lang.NotImplementedException;
+import org.bukkit.Bukkit;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.stream.Stream;
 
 public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
+    private PathEntityWrapper_v1_16_R3 currentPath;
+
     public MobNavigator_v1_16_R3(EntityInsentient entityinsentient, World world) {
         super(entityinsentient, world);
     }
 
     @Override
     public void navigateAlongPath(@NotNull PathEntityWrapper pathEntityWrapper, double speed) {
-        PathEntity newPath = ((PathEntityWrapper_v1_16_R3)pathEntityWrapper).pathEntity();
+        PathEntity newPath = (currentPath = ((PathEntityWrapper_v1_16_R3)pathEntityWrapper)).pathEntity();
 
         Vec3D currentPos = getEntity().getPositionVector();
 
@@ -29,7 +34,7 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
         int entityZ = NumberConversions.floor(currentPos.z);
 
         for(int i = 0; i < newPath.e(); i++) {
-            PathPoint sample = newPath.a(i); //(pr)
+            PathPoint sample = newPath.a(i);
 
             double distanceToSampleSquared = Vectors.distanceSquared(entityX, entityY, entityZ,
                     sample.getX(), sample.getY(), sample.getZ());
@@ -56,6 +61,21 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
         }
 
         a((PathEntity)null, speed);
+    }
+
+    @Override
+    public @Nullable PathEntityWrapper currentPath() {
+        return currentPath;
+    }
+
+    @Override
+    public boolean shouldRecalculate() {
+        return i();
+    }
+
+    @Override
+    public boolean isIdle() {
+        return m();
     }
 
     @Override
@@ -134,14 +154,6 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     public void a(double d0) {
         super.a(d0);
     }
-
-    @Override
-    public boolean i() {
-        return false;
-    }
-
-    @Override
-    public void j() { }
 
     @Nullable
     @Override
@@ -226,9 +238,6 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     public boolean r() {
         return false;
     }
-
-    @Override
-    public void b(BlockPosition blockposition) { }
 
     @Override
     protected void D_() { }

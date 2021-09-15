@@ -18,7 +18,7 @@ public class JacksonDataLoader implements DataLoader {
 
 
     public JacksonDataLoader(File rootDirectory) {
-        ObjectMapper mapper = ArenaApi.getInstance().getMapper();
+        ObjectMapper mapper = ArenaApi.getInstance().getObjectMapper();
 
         writer = mapper.writerWithDefaultPrettyPrinter();
         reader = mapper.reader();

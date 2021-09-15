@@ -20,5 +20,5 @@ repositories {
 dependencies {
     compileOnlyApi(project(":nms:nms-common"))
     paperNms("1.16.5-R0.1-SNAPSHOT")
-    implementation("org.apache.commons:commons-lang3:${project.property("commonsLang3Version")}")
+    implementation("org.apache.commons:commons-lang3:3.12.0")
 }

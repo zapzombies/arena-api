@@ -15,7 +15,8 @@ import io.github.zap.arenaapi.game.arena.JoinInformation;
 import io.github.zap.arenaapi.nms.common.ArenaNMSBridge;
 import io.github.zap.arenaapi.nms.v1_16_R3.ArenaNMSBridge_v1_16_R3;
 import io.github.zap.arenaapi.serialize.*;
-import io.github.zap.party.PartyPlusPlus;
+import io.github.zap.party.Party;
+import io.github.zap.party.plugin.PartyPlugin;
 import lombok.Getter;
 import net.kyori.adventure.sound.Sound;
 import org.apache.commons.lang3.Validate;
@@ -50,22 +51,11 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public final class ArenaApi extends JavaPlugin implements Listener {
-    @Getter
     private static ArenaApi instance;
-
-    @Getter
     private ArenaNMSBridge nmsBridge;
-
-    @Getter
-    private PartyPlusPlus partyPlusPlus;
-
-    @Getter
+    private PartyPlugin partyPlusPlus;
     private ProtocolLib protocolLib;
-
-    @Getter
     private SimpleModule module;
-
-    @Getter
     private ObjectMapper mapper;
 
     private final Map<String, ArenaManager<?>> arenaManagers = new HashMap<>();
@@ -100,6 +90,30 @@ public final class ArenaApi extends JavaPlugin implements Listener {
         }
 
         info("Disabled successfully.");
+    }
+
+    public static @NotNull ArenaApi getInstance() {
+        return instance;
+    }
+
+    public @NotNull ArenaNMSBridge getNmsBridge() {
+        return nmsBridge;
+    }
+
+    public @NotNull PartyPlugin getPartyPlusPlus() {
+        return partyPlusPlus;
+    }
+
+    public @NotNull ProtocolLib getProtocolLib() {
+        return protocolLib;
+    }
+
+    public @NotNull SimpleModule getJacksonModule() {
+        return module;
+    }
+
+    public @NotNull ObjectMapper getObjectMapper() {
+        return mapper;
     }
 
     private void initBridge() throws LoadFailureException {
