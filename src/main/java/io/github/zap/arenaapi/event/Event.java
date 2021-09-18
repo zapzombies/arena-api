@@ -5,10 +5,7 @@ import io.github.zap.arenaapi.ObjectDisposedException;
 import io.github.zap.arenaapi.util.AggregateException;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Encapsulates an event, which is capable of calling a list of EventHandlers. EVENTS ARE NOT THREAD SAFE! VERY VERY bad
@@ -67,6 +64,8 @@ public class Event<T> implements Disposable {
         if(disposed) {
             throw new ObjectDisposedException();
         }
+
+        Objects.requireNonNull(handler, "handler cannot be null");
 
         if(invokingHandlers) {
             pendingAdditions.add(handler);
@@ -180,7 +179,7 @@ public class Event<T> implements Disposable {
         if(!thrownExceptions.isEmpty()) {
             List<Exception> thrown = new ArrayList<>(thrownExceptions);
             thrownExceptions.clear();
-            throw new AggregateException("Exception(s) during event processing", thrown);
+            throw new AggregateException("exception(s) during event processing", thrown);
         }
     }
 
