@@ -27,12 +27,14 @@ public final class SuccessConditions {
     public static @NotNull SuccessCondition whenBoth(@NotNull SuccessCondition first, @NotNull SuccessCondition second) {
         Objects.requireNonNull(first, "first cannot be null");
         Objects.requireNonNull(first, "second cannot be null");
-        return (context, node, destination) -> first.hasCompleted(context, node, destination) && second.hasCompleted(context, node, destination);
+        return (context, node, destination) -> first.hasCompleted(context, node, destination) &&
+                second.hasCompleted(context, node, destination);
     }
 
     public static @NotNull SuccessCondition whenEither(@NotNull SuccessCondition first, @NotNull SuccessCondition second) {
         Objects.requireNonNull(first, "first cannot be null");
         Objects.requireNonNull(first, "second cannot be null");
-        return (context, node, destination) -> first.hasCompleted(context, node, destination) || second.hasCompleted(context, node, destination);
+        return (context, node, destination) -> first.hasCompleted(context, node, destination) ||
+                second.hasCompleted(context, node, destination);
     }
 }

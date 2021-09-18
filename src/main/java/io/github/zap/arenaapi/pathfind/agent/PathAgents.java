@@ -33,4 +33,6 @@ public final class PathAgents {
         Validate.isTrue(fallTolerance >= 0, "fallTolerance must be >= 0");
         return new PathAgentImpl(vector.x(), vector.y(), vector.z(), width, height, jumpHeight, fallTolerance);
     }
+
+
 }
