@@ -39,8 +39,13 @@ class WalkNodeStepper implements NodeStepper {
 
         BlockCollisionProvider.HitResult jumpTestResult = collisionProvider
                 .collisionMovingAlong(agentBounds, direction, translation);
+
+        if(direction == Direction.UP && !jumpTestResult.blockAtAgent()) {
+            return null;
+        }
+
         if(jumpTestResult.collides()) { //test if we need to jump
-            if(direction.isIntercardinal() || direction == Direction.UP) { //mobs can't jump diagonally (thanks mojang)
+            if(direction.isIntercardinal()) { //mobs can't jump diagonally (thanks mojang)
                 return null;
             }
 

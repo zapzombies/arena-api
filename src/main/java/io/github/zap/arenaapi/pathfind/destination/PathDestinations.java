@@ -27,9 +27,7 @@ public final class PathDestinations {
         return basic(target, vector.x(), vector.y(), vector.z());
     }
 
-    public static @Nullable PathDestination fromEntity(@NotNull Entity entity, @NotNull PathTarget target, boolean findBlock) {
-        Objects.requireNonNull(entity, "entity cannot be null!");
-
+    public static @NotNull PathDestination fromEntity(@NotNull Entity entity, @NotNull PathTarget target, boolean findBlock) {
         Location location = entity.getLocation();
 
         if(Utils.isValidLocation(entity.getLocation())) {
@@ -49,31 +47,27 @@ public final class PathDestinations {
                 }
                 while(views.isEmpty() && shrunkenBounds.getMinY() >= 1);
 
-                if(views.isEmpty()) {
-                    return null;
-                }
+                if(!views.isEmpty()) {
+                    BlockCollisionView highestView = null;
+                    double highestY = Double.MIN_VALUE;
+                    for(BlockCollisionView view : views) {
+                        double thisY = view.exactY();
 
-                BlockCollisionView highestView = null;
-                double highestY = Double.MIN_VALUE;
-                for(BlockCollisionView view : views) {
-                    double thisY = view.exactY();
+                        if(thisY > highestY) {
+                            highestY = thisY;
+                            highestView = view;
+                        }
+                    }
 
-                    if(thisY > highestY) {
-                        highestY = thisY;
-                        highestView = view;
+                    if(highestView != null) {
+                        return new PathDestinationImpl(target, highestView.x(), highestView.collision().isFull() ?
+                                highestView.y() + 1 : highestView.y(), highestView.z());
                     }
                 }
-
-                if(highestView != null) {
-                    return new PathDestinationImpl(target, highestView.x(), highestView.collision().isFull() ?
-                            highestView.y() + 1 : highestView.y(), highestView.z());
-                }
             }
-
-            return new PathDestinationImpl(target, location.getBlockX(), location.getBlockY(), location.getBlockZ());
         }
 
-        return null;
+        return new PathDestinationImpl(target, location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     public static @Nullable PathDestination fromCoordinates(@NotNull PathTarget target, @NotNull World world, double x, double y, double z) {

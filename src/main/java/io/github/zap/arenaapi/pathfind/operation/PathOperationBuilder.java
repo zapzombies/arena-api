@@ -67,8 +67,7 @@ public class PathOperationBuilder {
     }
 
     public @NotNull PathOperationBuilder withDestination(@NotNull Entity destination, @NotNull PathTarget target) {
-        Location location = destination.getLocation();
-        return withDestination(PathDestinations.basic(target, location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+        return withDestination(PathDestinations.fromEntity(destination, target, true));
     }
 
     public @NotNull PathOperationBuilder withDestination(@NotNull Vector3I destination) {
