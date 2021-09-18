@@ -8,14 +8,13 @@ plugins {
 description = "arena-api"
 
 repositories {
-    maven("https://repo.rapture.pw/repository/maven-snapshots")
-    maven("https://repo.dmulloy2.net/repository/public/")
-    maven("https://jitpack.io")
-
     maven(zgpr("zap-commons"))
     maven(zgpr("zap-party"))
     mavenCentral()
-    mavenLocal()
+
+    maven("https://repo.rapture.pw/repository/maven-snapshots")
+    maven("https://repo.dmulloy2.net/repository/public/")
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -46,11 +45,13 @@ dependencies {
 }
 
 tasks.relocate {
-    dependsOn(":nms:nms-common:build", ":nms:nms-1_16_R3:build")
+    dependsOn(":nms:nms-common:build")
+    dependsOn(":nms:nms-1_16_R3:build")
 }
 
 tasks.test {
-    dependsOn(":nms:nms-common:build", ":nms:nms-1_16_R3:build")
+    dependsOn(":nms:nms-common:build")
+    dependsOn( ":nms:nms-1_16_R3:build")
 
     testLogging {
         showStandardStreams = true
