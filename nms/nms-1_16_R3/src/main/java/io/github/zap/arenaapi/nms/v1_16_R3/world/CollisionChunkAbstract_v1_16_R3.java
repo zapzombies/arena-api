@@ -103,10 +103,8 @@ abstract class CollisionChunkAbstract_v1_16_R3 implements CollisionChunkView {
 
     @Override
     public boolean collidesWithAny(@NotNull BoundingBox worldBounds) {
-        BoundingBox adjusted = worldBounds.clone().expand(-Vectors.EPSILON);
-
-        if(chunkBounds.overlaps(adjusted)) {
-            BoundingBox overlap = adjusted.intersection(chunkBounds);
+        if(chunkBounds.overlaps(worldBounds)) {
+            BoundingBox overlap = worldBounds.clone().intersection(chunkBounds);
             SnapshotIterator iterator = new SnapshotIterator(overlap);
 
             while(iterator.hasNext()) {
@@ -125,9 +123,8 @@ abstract class CollisionChunkAbstract_v1_16_R3 implements CollisionChunkView {
     public @NotNull List<BlockCollisionView> collisionsWith(@NotNull BoundingBox worldBounds) {
         List<BlockCollisionView> shapes = new ArrayList<>();
 
-        BoundingBox adjusted = worldBounds.clone().expand(-Vectors.EPSILON);
-        if(adjusted.overlaps(chunkBounds)) {
-            BoundingBox overlap = adjusted.intersection(chunkBounds);
+        if(worldBounds.overlaps(chunkBounds)) {
+            BoundingBox overlap = worldBounds.clone().intersection(chunkBounds);
             SnapshotIterator iterator = new SnapshotIterator(overlap);
 
             while(iterator.hasNext()) {

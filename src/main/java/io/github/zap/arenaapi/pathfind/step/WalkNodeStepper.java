@@ -22,48 +22,63 @@ class WalkNodeStepper implements NodeStepper {
 
     @Override
     public @Nullable Vector3I stepDirectional(@NotNull BlockCollisionProvider collisionProvider,
-                                              @NotNull PathAgent agent, @NotNull Vector3D position,
-                                              @NotNull Direction direction) {
+                                              @NotNull BlockCollisionView blockAtFeet, @NotNull PathAgent agent,
+                                              @NotNull Vector3D position, @NotNull Direction direction) {
         return switch (direction) {
             case UP, NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST ->
-                    doStep(collisionProvider, agent, position, direction);
+                    doStep(collisionProvider, blockAtFeet, agent, position, direction);
             default -> null;
         };
     }
 
-    private Vector3I doStep(BlockCollisionProvider collisionProvider, PathAgent agent, Vector3D position, Direction direction) {
-        Vector3D translation = computeTranslation(position, direction);
+    private Vector3I doStep(BlockCollisionProvider collisionProvider, BlockCollisionView blockAtFeet, PathAgent agent,
+                            Vector3D position, Direction direction) {
+        Vector3D translate = computeTranslation(position, direction);
 
         BoundingBox agentBounds = getAgentBounds(agent, position);
-        BoundingBox agentBoundsAtTargetNode = agentBounds.clone().shift(translation.x(), translation.y(), translation.z());
-
         BlockCollisionProvider.HitResult jumpTestResult = collisionProvider
-                .collisionMovingAlong(agentBounds, direction, translation);
+                .collisionMovingAlong(agentBounds, direction, translate);
 
         if(direction == Direction.UP && !jumpTestResult.blockAtAgent()) {
             return null;
         }
 
+        BoundingBox agentBoundsAtTargetNode = agentBounds.clone().shift(translate.x(), translate.y(), translate.z());
         if(jumpTestResult.collides()) { //test if we need to jump
-            if(direction.isIntercardinal()) { //mobs can't jump diagonally (thanks mojang)
+            if(direction.isIntercardinal() || direction == Direction.UP) { //mobs can't jump diagonally (thanks mojang)
                 return null;
             }
 
-            Vector3D seekResult = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode.clone(), true);
-            Vector3D shiftVector = jumpTestResult.translationVector();
+            Vector3D seek = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode.clone(), true);
+            Vector3D shift = jumpTestResult.translationVector();
 
-            if(seekResult != null) {
-                BoundingBox adjustedBounds = agentBounds.clone().shift(shiftVector.x(), shiftVector.y(), shiftVector.z());
-                double deltaY = seekResult.y() - agentBounds.getMinY();
+            if(seek != null) {
+                BoundingBox adjusted = agentBounds.clone().shift(shift.x(), shift.y(), shift.z());
+                double dY = seek.y() - agentBounds.getMinY();
 
-                if(!collisionProvider.collisionMovingAlong(adjustedBounds, Direction.UP, Vectors.of(0, deltaY, 0)).collides() &&
-                        !collisionProvider.collisionMovingAlong(adjustedBounds.shift(0, deltaY, 0),
-                                direction, Vectors.subtract(translation, shiftVector)).collides()) {
-                    return Vectors.asIntFloor(seekResult);
+                if(!collisionProvider.collisionMovingAlong(adjusted, Direction.UP, Vectors.of(0, dY, 0)).collides()
+                        && !collisionProvider.collisionMovingAlong(adjusted.shift(0, dY, 0), direction,
+                        Vectors.subtract(translate, shift)).collides()) {
+                    return Vectors.asIntFloor(seek);
                 }
             }
         }
         else {
+            if(direction == Direction.UP) {
+                if(blockAtFeet != null) {
+                    if(blockAtFeet.collision().isEmpty()) {
+                        return null;
+                    }
+
+                    double exactY = blockAtFeet.exactY();
+                    if(exactY > position.y() && (exactY - position.y()) < agent.jumpHeight()) {
+                        return Vectors.asIntFloor(position.x(), exactY, position.z());
+                    }
+                }
+
+                return null;
+            }
+
             Vector3D result = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode, false);
 
             if(result != null && !Vectors.fuzzyEquals(result, position)) {

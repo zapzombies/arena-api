@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
  * as "coarse" paths that appear suboptimal to the user. Returning more nodes may improve path appearance at the cost
  * of performance.
  */
+@FunctionalInterface
 public interface NodeExplorer {
     <T extends PathNode> void exploreNodes(@NotNull PathfinderContext context, @NotNull PathAgent agent, @Nullable T[] buffer,
                                            @NotNull T current, @NotNull PathNodeFactory<T> pathNodeFactory);

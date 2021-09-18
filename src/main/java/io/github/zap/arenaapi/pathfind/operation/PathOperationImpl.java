@@ -1,5 +1,6 @@
 package io.github.zap.arenaapi.pathfind.operation;
 
+import io.github.zap.arenaapi.ArenaApi;
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
 import io.github.zap.arenaapi.pathfind.agent.PathAgent;
 import io.github.zap.arenaapi.pathfind.calculate.AversionCalculator;
@@ -13,10 +14,15 @@ import io.github.zap.arenaapi.pathfind.path.PathNode;
 import io.github.zap.arenaapi.pathfind.path.PathResult;
 import io.github.zap.arenaapi.pathfind.path.PathResults;
 import io.github.zap.arenaapi.pathfind.step.NodeExplorer;
+import io.github.zap.arenaapi.pathfind.util.Utils;
 import io.github.zap.commons.vectors.Vectors;
 import io.github.zap.commons.vectors.graph.*;
+import org.bukkit.util.BoundingBox;
+import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.logging.Level;
 
 class PathOperationImpl implements PathOperation {
     private final PathAgent agent;
@@ -71,7 +77,20 @@ class PathOperationImpl implements PathOperation {
                 }
             }
             else {
-                currentNode = new PathNodeImpl(Vectors.asIntFloor(agent));
+                double halfWidth = agent.width() / 2;
+                BoundingBox agentBounds = new BoundingBox(agent.x() - halfWidth, agent.y(), agent.z() - halfWidth,
+                        agent.x() + halfWidth, agent.y() + agent.height(), agent.z() + halfWidth);
+
+                BlockCollisionView highest = Utils.highestBlockBelow(context.blockProvider(), agentBounds);
+
+                if(highest == null) {
+                    complete(false);
+                    return true;
+                }
+
+                currentNode = new PathNodeImpl(Vectors.of(NumberConversions.floor(agent.x()),
+                        highest.collision().isFull() ? highest.y() + 1 : NumberConversions.floor(highest.exactY()),
+                        NumberConversions.floor(agent.z())));
                 currentNode.score.set(0, heuristicCalculator.compute(context, currentNode, destination));
                 bestFound = currentNode;
             }
@@ -114,7 +133,7 @@ class PathOperationImpl implements PathOperation {
             }
         }
         else {
-            throw new IllegalStateException("Cannot call step() for PathOperation with state " + state);
+            throw new IllegalStateException("cannot call step() for PathOperation with state " + state);
         }
 
         return false;
@@ -128,11 +147,11 @@ class PathOperationImpl implements PathOperation {
     @Override
     public @NotNull PathResult result() {
         if(state == State.STARTED) {
-            throw new IllegalStateException("Cannot get PathResult for a PathOperation that has not completed!");
+            throw new IllegalStateException("cannot get PathResult for a PathOperation that has not completed");
         }
 
         if(result == null) {
-            throw new IllegalStateException("Result has not been compiled for " + this);
+            throw new IllegalStateException("result has not been determined for " + this);
         }
 
         return result;

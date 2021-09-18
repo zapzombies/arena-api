@@ -32,37 +32,12 @@ public final class PathDestinations {
 
         if(Utils.isValidLocation(entity.getLocation())) {
             if(findBlock) {
-                BlockCollisionProvider blockCollisionProvider =
-                        BlockCollisionProviders.proxyAsyncProvider(entity.getWorld(), 1);
+                BlockCollisionView highest = Utils.highestBlockBelow(BlockCollisionProviders
+                        .proxyAsyncProvider(entity.getWorld(), 1), entity.getBoundingBox());
 
-                BoundingBox originalBounds = entity.getBoundingBox();
-                BoundingBox shrunkenBounds = entity.getBoundingBox().resize(
-                        originalBounds.getMinX(), originalBounds.getMinY(), originalBounds.getMinZ(),
-                        originalBounds.getMaxX(), originalBounds.getMinY() + 1, originalBounds.getMaxZ());
-
-                List<BlockCollisionView> views;
-                do {
-                    shrunkenBounds.shift(0, -1, 0);
-                    views = blockCollisionProvider.solidsOverlapping(entity.getBoundingBox());
-                }
-                while(views.isEmpty() && shrunkenBounds.getMinY() >= 1);
-
-                if(!views.isEmpty()) {
-                    BlockCollisionView highestView = null;
-                    double highestY = Double.MIN_VALUE;
-                    for(BlockCollisionView view : views) {
-                        double thisY = view.exactY();
-
-                        if(thisY > highestY) {
-                            highestY = thisY;
-                            highestView = view;
-                        }
-                    }
-
-                    if(highestView != null) {
-                        return new PathDestinationImpl(target, highestView.x(), highestView.collision().isFull() ?
-                                highestView.y() + 1 : highestView.y(), highestView.z());
-                    }
+                if(highest != null) {
+                    return new PathDestinationImpl(target, highest.x(), highest.collision().isFull() ?
+                            highest.y() + 1 : highest.y(), highest.z());
                 }
             }
         }
