@@ -25,9 +25,9 @@ class WalkNodeExplorer implements NodeExplorer {
             return;
         }
 
-        BlockCollisionView blockAtCurrent = context.blockProvider().getBlock(current);
+        BlockCollisionView currentBlock = context.blockProvider().getBlock(current);
 
-        if(blockAtCurrent == null) { //return if we have no block at the current node
+        if(currentBlock == null) { //return if we have no block at the current node
             if(buffer.length > 0) {
                 buffer[0] = null;
             }
@@ -40,21 +40,25 @@ class WalkNodeExplorer implements NodeExplorer {
             position = agent;
         }
         else { //...otherwise, make the assumption it's trying to pathfind from the exact center of the block
-            position = Vectors.of(current.x() + 0.5, blockAtCurrent.exactY(), current.z() + 0.5);
+            position = Vectors.of(current.x() + 0.5, currentBlock.exactY(), current.z() + 0.5);
         }
 
         int j = 0;
         for(int i = 0; i < buffer.length; i++) { //try to go all 8 cardinal/intercardinal directions as well as up
             Direction direction = Direction.valueAtIndex(i);
+            if(direction == Direction.UP && currentBlock.collision().isEmpty()) {
+                continue;
+            }
+
             Vector3I nextTarget = Vectors.add(current, direction);
 
             if(chunkBounds.hasBlock(nextTarget)) {
-                Vector3I nodePosition = stepper.stepDirectional(context.blockProvider(), agent, position, direction);
+                Vector3I nodePosition = stepper.stepDirectional(context.blockProvider(), currentBlock, agent, position, direction);
 
                 if(nodePosition != null && chunkBounds.hasBlock(nodePosition)) {
                     T newNode = pathNodeFactory.make(nodePosition);
 
-                    if(blockAtCurrent.collision().isPartial() && nodePosition.y() > current.y()) {
+                    if(currentBlock.collision().isPartial() && nodePosition.y() > position.y()) {
                         newNode.setOffsetVector(Direction.UP);
                     }
 

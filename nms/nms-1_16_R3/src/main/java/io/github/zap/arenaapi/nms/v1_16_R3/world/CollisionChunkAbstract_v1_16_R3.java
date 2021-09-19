@@ -102,9 +102,9 @@ abstract class CollisionChunkAbstract_v1_16_R3 implements CollisionChunkView {
     }
 
     @Override
-    public boolean collidesWithAny(@NotNull BoundingBox worldRelativeBounds) {
-        if(chunkBounds.overlaps(worldRelativeBounds)) {
-            BoundingBox overlap = worldRelativeBounds.clone().intersection(chunkBounds);
+    public boolean collidesWithAny(@NotNull BoundingBox worldBounds) {
+        if(chunkBounds.overlaps(worldBounds)) {
+            BoundingBox overlap = worldBounds.clone().intersection(chunkBounds);
             SnapshotIterator iterator = new SnapshotIterator(overlap);
 
             while(iterator.hasNext()) {

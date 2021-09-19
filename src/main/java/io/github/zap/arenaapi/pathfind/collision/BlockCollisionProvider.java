@@ -21,8 +21,8 @@ import java.util.List;
  * call a method concurrently.
  */
 public interface BlockCollisionProvider {
-    record HitResult(boolean collides, BlockCollisionView nearest, Vector3D translationVector) {
-        public static HitResult NO_HIT = new HitResult(false, null, null);
+    record HitResult(boolean collides, boolean blockAtAgent, BlockCollisionView nearest, Vector3D translationVector) {
+        public static HitResult NO_HIT = new HitResult(false, false, null, null);
     }
 
     /**

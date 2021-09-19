@@ -121,7 +121,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         double width = agentBounds.getWidthX();
 
         List<BlockCollisionView> collisionViews = solidsOverlapping(expandedBounds);
-        removeCollidingAtAgent(agentBounds, collisionViews);
+        boolean hitsAtAgent = removeCollidingAtAgent(agentBounds, collisionViews);
 
         if(direction.isAxisAligned()) {
             if(collisionViews.isEmpty()) { //for N, E, S, W, U and D there is no collision if collisionViews is empty
@@ -134,7 +134,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
 
                 return new HitTestResult(HitTestType.HITS, Vectors.add(face.min(), shapeVector),
                         Vectors.add(face.max(), shapeVector));
-            });
+            }, hitsAtAgent);
         }
         else if(direction.isIntercardinal()) {
             Direction first = direction.rotateClockwise();
@@ -156,7 +156,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
                         secondPoint.x(), secondPoint.z());
 
                 return new HitTestResult(type, firstPoint, secondPoint);
-            });
+            }, hitsAtAgent);
         }
         else {
             throw new IllegalArgumentException("Direction " + direction + " not supported");
@@ -169,7 +169,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     }
 
     private HitResult nearestView(Iterable<BlockCollisionView> collisions, BoundingBox agentBounds,
-                                  Direction direction, ViewPredicate filter) {
+                                  Direction direction, ViewPredicate filter, boolean collisionAtEntity) {
         double halfWidth = agentBounds.getWidthX() / 2;
         double nearestMagnitudeSquared = Double.POSITIVE_INFINITY;
         Vector3D nearestTranslation = null;
@@ -210,15 +210,19 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
             }
         }
 
-        return new HitResult(collides, nearestCollision, nearestTranslation);
+        return new HitResult(collides, collisionAtEntity, nearestCollision, nearestTranslation);
     }
 
-    private void removeCollidingAtAgent(BoundingBox agentBounds, List<BlockCollisionView> hits) {
+    private boolean removeCollidingAtAgent(BoundingBox agentBounds, List<BlockCollisionView> hits) {
+        boolean foundOne = false;
         for(int i = hits.size() - 1; i >= 0; i--) {
             if(hits.get(i).overlaps(agentBounds)) {
                 hits.remove(i);
+                foundOne = true;
             }
         }
+
+        return foundOne;
     }
 
     /*

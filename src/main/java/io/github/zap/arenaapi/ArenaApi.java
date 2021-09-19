@@ -126,7 +126,7 @@ public final class ArenaApi extends JavaPlugin implements Listener {
 
     private void initDependencies() throws LoadFailureException {
         protocolLib = getDependentPlugin(PluginNames.PROTOCOL_LIB, true,true);
-        partyPlusPlus = ArenaApi.getDependentPlugin(PluginNames.PARTY_PLUS_PLUS, false, false);
+        partyPlusPlus = ArenaApi.getDependentPlugin(PluginNames.PARTY_PLUS_PLUS, true, false);
     }
 
     private void initMapper() {

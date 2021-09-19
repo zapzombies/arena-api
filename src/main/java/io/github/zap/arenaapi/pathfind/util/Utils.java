@@ -1,42 +1,46 @@
 package io.github.zap.arenaapi.pathfind.util;
 
-import io.github.zap.arenaapi.ArenaApi;
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
-import io.github.zap.arenaapi.nms.common.world.VoxelShapeWrapper;
-import io.github.zap.arenaapi.nms.common.world.WorldBridge;
-import io.github.zap.commons.vectors.Direction;
+import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProvider;
+import io.github.zap.commons.vectors.Vectors;
 import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 public class Utils {
-    private static final WorldBridge worldBridge = ArenaApi.getInstance().getNmsBridge().worldBridge();
-
-    public static double testFall(@NotNull Location location) {
-        if(!isValidLocation(location)) {
-            return Double.NaN;
-        }
-
-        int x = location.getBlockX();
-        int y = location.getBlockY();
-        int z = location.getBlockZ();
-
-        World world = location.getWorld();
-
-        while(y > -1) {
-            BlockCollisionView shape = worldBridge.collisionFor(world.getBlockAt(x, y, z));
-
-            if(!shape.collision().isEmpty()) {
-                return location.getY() - shape.exactY();
-            }
-
-            y--;
-        }
-
-        return 0;
-    }
-
     public static boolean isValidLocation(@NotNull Location location) {
         return location.getWorld().getWorldBorder().isInside(location) && location.getY() >= 0 && location.getY() < 256;
+    }
+
+    public static BlockCollisionView highestBlockBelow(@NotNull BlockCollisionProvider provider, @NotNull BoundingBox boundingBox) {
+        BoundingBox shrunkenBounds = boundingBox.clone().resize(
+                boundingBox.getMinX(), boundingBox.getMinY(), boundingBox.getMinZ(),
+                boundingBox.getMaxX(), boundingBox.getMinY() + 1, boundingBox.getMaxZ());
+
+        List<BlockCollisionView> views;
+        do {
+            shrunkenBounds.shift(0, -1, 0);
+            views = provider.solidsOverlapping(shrunkenBounds);
+        }
+        while(views.isEmpty() && shrunkenBounds.getMinY() >= 1);
+
+        BlockCollisionView highestView = null;
+        double highestY = Double.MIN_VALUE;
+        for(BlockCollisionView view : views) {
+            double thisY = view.exactY();
+
+            if(thisY > highestY) {
+                highestY = thisY;
+                highestView = view;
+            }
+        }
+
+        if(highestView != null) {
+            return highestView;
+        }
+
+        return provider.getBlock(Vectors.asIntFloor(boundingBox.getCenterX(), 0, boundingBox.getCenterZ()));
     }
 }

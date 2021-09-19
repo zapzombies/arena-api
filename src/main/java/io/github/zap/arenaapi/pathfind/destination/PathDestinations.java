@@ -1,15 +1,21 @@
 package io.github.zap.arenaapi.pathfind.destination;
 
+import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
+import io.github.zap.arenaapi.nms.common.world.WorldBridge;
+import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProvider;
+import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProviders;
 import io.github.zap.arenaapi.pathfind.path.PathTarget;
 import io.github.zap.arenaapi.pathfind.util.Utils;
 import io.github.zap.commons.vectors.Vector3I;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 
 public final class PathDestinations {
@@ -21,26 +27,22 @@ public final class PathDestinations {
         return basic(target, vector.x(), vector.y(), vector.z());
     }
 
-    public static @Nullable PathDestination fromEntity(@NotNull Entity entity, @NotNull PathTarget target, boolean findBlock) {
-        Objects.requireNonNull(entity, "entity cannot be null!");
+    public static @NotNull PathDestination fromEntity(@NotNull Entity entity, @NotNull PathTarget target, boolean findBlock) {
         Location location = entity.getLocation();
 
-        if(findBlock) {
-            double fallDistance = Utils.testFall(location);
-
-            if(Double.isNaN(fallDistance)) {
-                return null;
-            }
-
-            return new PathDestinationImpl(target, NumberConversions.floor(location.getX()),
-                    NumberConversions.floor(location.getY() - fallDistance), NumberConversions.floor(location.getZ()));
-        }
-
         if(Utils.isValidLocation(entity.getLocation())) {
-            return new PathDestinationImpl(target, location.getBlockX(), location.getBlockY(), location.getBlockZ());
+            if(findBlock) {
+                BlockCollisionView highest = Utils.highestBlockBelow(BlockCollisionProviders
+                        .proxyAsyncProvider(entity.getWorld(), 1), entity.getBoundingBox());
+
+                if(highest != null) {
+                    return new PathDestinationImpl(target, highest.x(), highest.collision().isFull() ?
+                            highest.y() + 1 : highest.y(), highest.z());
+                }
+            }
         }
 
-        return null;
+        return new PathDestinationImpl(target, location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     public static @Nullable PathDestination fromCoordinates(@NotNull PathTarget target, @NotNull World world, double x, double y, double z) {
