@@ -12,14 +12,14 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 
 public abstract class ArenaPlayer<PlayerType extends ArenaPlayer<PlayerType>> implements PlayerView {
-    protected final ReloadablePlugin playerPlugin;
+    protected final ReloadablePlugin<?> playerPlugin;
     protected final UUID playerUUID;
 
     private final Map<String, StateOperation> stateMap;
     private Reference<Player> playerCache;
     private StateOperation currentState;
 
-    protected ArenaPlayer(@NotNull ReloadablePlugin plugin, @NotNull UUID playerUUID) {
+    protected ArenaPlayer(@NotNull ReloadablePlugin<?> plugin, @NotNull UUID playerUUID) {
         this.playerPlugin = Objects.requireNonNull(plugin, "plugin cannot be null");
         this.playerUUID = Objects.requireNonNull(playerUUID, "playerUUID cannot be null");
         this.stateMap = new HashMap<>();
@@ -63,7 +63,7 @@ public abstract class ArenaPlayer<PlayerType extends ArenaPlayer<PlayerType>> im
         return playerUUID;
     }
 
-    public @NotNull ReloadablePlugin getPlugin() {
+    public @NotNull ReloadablePlugin<?> getPlugin() {
         return playerPlugin;
     }
 
