@@ -84,7 +84,8 @@ abstract class AsyncPathfinderEngineAbstract<T extends PathfinderContext> implem
             }
 
             if(Thread.interrupted()) {
-                plugin.getLogger().log(Level.WARNING, "processOperation interrupted for PathOperation. Returning null PathResult");
+                plugin.getLogger().log(Level.WARNING, "processOperation interrupted for PathOperation. " +
+                        "Returning null PathResult");
                 return null;
             }
         }

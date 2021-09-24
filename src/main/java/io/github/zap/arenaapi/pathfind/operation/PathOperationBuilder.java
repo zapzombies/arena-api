@@ -119,8 +119,7 @@ public class PathOperationBuilder {
         heuristicCalculator = heuristicCalculator == null ? HeuristicCalculators.distanceOnly() : heuristicCalculator;
         aversionCalculator = aversionCalculator == null ? AversionCalculators.defaultWalk() : aversionCalculator;
         successCondition = successCondition == null ? SuccessConditions.sameBlock() : successCondition;
-        agent = agent == null ? (PathAgents.fromVector(Vectors.of(agentEntity.getLocation()), agentEntity.getWidth(),
-                agentEntity.getHeight(), jumpHeight, fallTolerance)) : agent;
+        agent = agent == null ? PathAgents.fromEntity(agentEntity, jumpHeight, fallTolerance) : agent;
         chunkBounds = chunkBounds == null ?
                 ChunkCoordinateProviders.squareFromCenter(Vectors.asChunk(agent), pathfindRadius) : chunkBounds;
         nodeExplorer = nodeExplorer == null ? NodeExplorers.basicWalk(nodeStepper == null ?
