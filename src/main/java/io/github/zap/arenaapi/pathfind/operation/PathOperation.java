@@ -7,7 +7,7 @@ import io.github.zap.arenaapi.pathfind.destination.PathDestination;
 import io.github.zap.arenaapi.pathfind.path.PathNode;
 import io.github.zap.arenaapi.pathfind.path.PathResult;
 import io.github.zap.arenaapi.pathfind.step.NodeExplorer;
-import io.github.zap.commons.vectors.graph.ChunkGraph;
+import io.github.zap.commons.graph.ChunkGraph;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

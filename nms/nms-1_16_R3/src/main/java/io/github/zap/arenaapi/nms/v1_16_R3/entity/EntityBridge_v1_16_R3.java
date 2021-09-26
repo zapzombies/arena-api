@@ -97,6 +97,23 @@ public class EntityBridge_v1_16_R3 implements EntityBridge {
         }
     }
 
+    public @Nullable MobNavigator getNavigator(@NotNull Mob mob) {
+        //TODO: known issue with this is that zombies mobs riding regular entities (players) will not work
+        Entity vehicle = mob.getVehicle();
+        if(vehicle instanceof Mob mobVehicle) {
+            return getNavigator(mobVehicle);
+        }
+        else {
+            NavigationAbstract navigationAbstract = ((CraftMob)mob).getHandle().getNavigation();
+
+            if(navigationAbstract instanceof MobNavigator mobNavigator) {
+                return mobNavigator;
+            }
+
+            return null;
+        }
+    }
+
     @Override
     public double distanceTo(@NotNull Entity entity, double x, double y, double z) {
         return ((CraftEntity) entity).getHandle().h(x, y, z);

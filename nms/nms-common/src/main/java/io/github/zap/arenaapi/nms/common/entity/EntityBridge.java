@@ -46,6 +46,8 @@ public interface EntityBridge {
 
     @Nullable MobNavigator overrideNavigatorFor(Mob mob) throws NoSuchFieldException, IllegalAccessException;
 
+    @Nullable MobNavigator getNavigator(@NotNull Mob mob);
+
     /**
      * Calculates the entity's distance to a location based on its NMS calculation
      * @param entity The entity to check distance from

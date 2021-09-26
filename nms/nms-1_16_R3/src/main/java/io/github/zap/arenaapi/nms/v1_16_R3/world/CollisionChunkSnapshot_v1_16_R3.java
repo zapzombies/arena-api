@@ -1,8 +1,8 @@
 package io.github.zap.arenaapi.nms.v1_16_R3.world;
 
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
-import io.github.zap.commons.vectors.graph.ArrayChunkGraph;
-import io.github.zap.commons.vectors.graph.ChunkGraph;
+import io.github.zap.commons.graph.ArrayChunkGraph;
+import io.github.zap.commons.graph.ChunkGraph;
 import net.minecraft.server.v1_16_R3.*;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;

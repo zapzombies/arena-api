@@ -1,19 +1,13 @@
 package io.github.zap.arenaapi.nms.v1_16_R3.pathfind;
 
-import com.google.common.math.DoubleMath;
 import io.github.zap.arenaapi.nms.common.pathfind.MobNavigator;
 import io.github.zap.arenaapi.nms.common.pathfind.PathEntityWrapper;
-import io.github.zap.commons.vectors.Vectors;
 import net.minecraft.server.v1_16_R3.*;
-import org.apache.commons.lang.NotImplementedException;
-import org.bukkit.Bukkit;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.stream.Stream;
 
 public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
