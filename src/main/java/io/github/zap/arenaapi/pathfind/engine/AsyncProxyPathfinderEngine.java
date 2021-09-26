@@ -22,7 +22,7 @@ class AsyncProxyPathfinderEngine extends AsyncPathfinderEngineAbstract<Pathfinde
     @NotNull
     @Override
     protected PathfinderContext makeContext(@NotNull BlockCollisionProvider provider) {
-        plugin.getLogger().log(Level.INFO, "Pathfinder context created for world " + provider.world().getName());
+        plugin.getLogger().info("Pathfinder context created for world " + provider.world().getName());
         return PathfinderContexts.proxyContext(provider, PathMergers.defaultMerger(), PATH_CAPACITY);
     }
 

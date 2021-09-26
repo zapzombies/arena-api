@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,7 +46,7 @@ public abstract class ArenaManager<T extends Arena<T>> implements Disposable {
      * @param joinAttempt The JoinInformation object
      * @param onCompletion The consumer that will execute when the JoinInformation is processed. This should always
      *                     run on the main server thread. The first parameter of the ImmutablePair should correspond
-     *                     to the success of the operation (whether or not the players were added). The second
+     *                     to the success of the operation (whether the players were added). The second
      *                     parameter should be a resource key pointing to an error message explaining, in user-friendly
      *                     terms, why the JoinAttempt was rejected. It should only be non-null if the first part of
      *                     the pair is false.
