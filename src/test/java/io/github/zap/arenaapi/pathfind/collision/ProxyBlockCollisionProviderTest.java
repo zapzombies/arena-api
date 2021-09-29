@@ -10,12 +10,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 class ProxyBlockCollisionProviderTest {
     private WorldBridge worldBridge;
@@ -214,15 +214,14 @@ class ProxyBlockCollisionProviderTest {
         CollisionChunkView mockChunkView = mockChunkAt(x >> 4, z >> 4);
 
         VoxelShapeWrapper mockVoxelShapeWrapper = Mockito.mock(VoxelShapeWrapper.class);
-        Mockito.when(mockVoxelShapeWrapper.size()).thenReturn(voxelShapes.size());
         Mockito.when(mockVoxelShapeWrapper.boundingBox()).thenReturn(blockBounds);
 
-        int i = 0;
-        for(BoundingBox bounds : voxelShapes) {
-            Mockito.when(mockVoxelShapeWrapper.shapeAt(i++)).thenAnswer(invocation ->
-                    new Bounds(bounds.getMinX(), bounds.getMinY(), bounds.getMinZ(),
-                            bounds.getMaxX(), bounds.getMaxY(), bounds.getMaxZ()));
-        }
+        System.out.println("Size: " + voxelShapes.size());
+        System.out.println("VoxelShapeWrapper mock: " + mockVoxelShapeWrapper);
+
+        Mockito.when(mockVoxelShapeWrapper.iterator()).thenAnswer(invocation -> voxelShapes.stream().map(bb ->
+                new Bounds(bb.getMinX(), bb.getMinY(), bb.getMinZ(), bb.getMaxX(),
+                bb.getMaxY(), bb.getMaxZ())).collect(Collectors.toList()).listIterator());
 
         BlockCollisionView mockBlockView = Mockito.mock(BlockCollisionView.class);
         Mockito.when(mockBlockView.collision()).thenReturn(mockVoxelShapeWrapper);
@@ -236,14 +235,15 @@ class ProxyBlockCollisionProviderTest {
         return mockBlockView;
     }
 
-    private void testWalkDirection(BoundingBox agentBounds, List<BlockCollisionView> initialCollisions, Direction direction,
-                                   Vector3I origin, boolean collides, Vector3D expectedTranslation) {
+    private void testWalkDirection(BoundingBox agentBounds, List<BlockCollisionView> initialCollisions,
+                                   Direction direction, Vector3I origin, boolean collides, Vector3D expectedTranslation) {
         CollisionChunkView chunk = mockChunkAt(origin.x() >> 4, origin.z() >> 4);
-        Mockito.when(chunk.collisionsWith(ArgumentMatchers.any())).thenReturn(initialCollisions).thenThrow();
+        Mockito.when(chunk.collisionsWith(ArgumentMatchers.any())).thenReturn(initialCollisions);
 
-        BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds.clone()
-                        .shift(origin.x(), origin.y(), origin.z()), Vectors.asDouble(direction));
-        Assertions.assertSame(collides, result.collides());
+        BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds.clone().shift(origin.x(),
+                        origin.y(), origin.z()), Vectors.asDouble(direction));
+        Assertions.assertSame(collides, result.collides(), "expected collision to be " + collides + " for " +
+                "direction " + direction + " with expected translation " + expectedTranslation);
 
         if(expectedTranslation != null) {
             Assertions.assertTrue(Vectors.fuzzyEquals(expectedTranslation, result.translationVector()),
