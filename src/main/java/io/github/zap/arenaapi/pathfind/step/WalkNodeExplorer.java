@@ -19,8 +19,9 @@ class WalkNodeExplorer implements NodeExplorer {
         this.chunkBounds = chunkBounds;
     }
 
-    public <T extends PathNode> void exploreNodes(@NotNull PathfinderContext context, @NotNull PathAgent agent, T[] buffer,
-                                                  @NotNull T current, @NotNull PathNodeFactory<T> pathNodeFactory) {
+    public <T extends PathNode> void exploreNodes(@NotNull PathfinderContext context, @NotNull PathAgent agent,
+                                                  T[] buffer, @NotNull T current,
+                                                  @NotNull PathNodeFactory<T> pathNodeFactory) {
         if(buffer == null) {
             return;
         }
@@ -53,7 +54,8 @@ class WalkNodeExplorer implements NodeExplorer {
             Vector3I nextTarget = Vectors.add(current, direction);
 
             if(chunkBounds.hasBlock(nextTarget)) {
-                Vector3I nodePosition = stepper.stepDirectional(context.blockProvider(), currentBlock, agent, position, direction);
+                Vector3I nodePosition = stepper.stepDirectional(context.blockProvider(), currentBlock, agent, position,
+                        direction);
 
                 if(nodePosition != null && chunkBounds.hasBlock(nodePosition)) {
                     T newNode = pathNodeFactory.make(nodePosition);
@@ -72,4 +74,3 @@ class WalkNodeExplorer implements NodeExplorer {
         }
     }
 }
-

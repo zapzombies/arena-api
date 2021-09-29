@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 class ProxyBlockCollisionProviderTest {
@@ -54,7 +53,7 @@ class ProxyBlockCollisionProviderTest {
 
     @Test
     void collidesMovingAlongNoModification() {
-        assertNoModification(fullAgentBounds, (bounds) -> provider.collisionMovingAlong(bounds, Direction.NORTH,
+        assertNoModification(fullAgentBounds, (bounds) -> provider.collisionMovingAlong(bounds,
                 Vectors.asDouble(Direction.NORTH)));
     }
 
@@ -227,7 +226,7 @@ class ProxyBlockCollisionProviderTest {
 
         BlockCollisionView mockBlockView = Mockito.mock(BlockCollisionView.class);
         Mockito.when(mockBlockView.collision()).thenReturn(mockVoxelShapeWrapper);
-        Mockito.when(mockBlockView.overlaps(ArgumentMatchers.any())).thenReturn(overlapsAtAgent);
+        Mockito.when(mockBlockView.isOverlapping(ArgumentMatchers.any())).thenReturn(overlapsAtAgent);
 
         Mockito.when(mockBlockView.x()).thenReturn(x);
         Mockito.when(mockBlockView.y()).thenReturn(y);
@@ -243,7 +242,7 @@ class ProxyBlockCollisionProviderTest {
         Mockito.when(chunk.collisionsWith(ArgumentMatchers.any())).thenReturn(initialCollisions).thenThrow();
 
         BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds.clone()
-                        .shift(origin.x(), origin.y(), origin.z()), direction, Vectors.asDouble(direction));
+                        .shift(origin.x(), origin.y(), origin.z()), Vectors.asDouble(direction));
         Assertions.assertSame(collides, result.collides());
 
         if(expectedTranslation != null) {

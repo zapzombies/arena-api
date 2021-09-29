@@ -54,8 +54,7 @@ public interface BlockCollisionProvider {
 
     @NotNull List<BlockCollisionView> solidsOverlapping(@NotNull BoundingBox bounds);
 
-    @NotNull HitResult collisionMovingAlong(@NotNull BoundingBox agentBounds, @NotNull Direction direction,
-                                            @NotNull Vector3D translation);
+    @NotNull HitResult collisionMovingAlong(@NotNull BoundingBox agentBounds, @NotNull Vector3D movement);
 
     default @Nullable BlockCollisionView getBlock(@NotNull Vector3I at) {
         return getBlock(at.x(), at.y(), at.z());

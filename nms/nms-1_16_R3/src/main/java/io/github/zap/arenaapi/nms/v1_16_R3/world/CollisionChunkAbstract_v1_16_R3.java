@@ -7,7 +7,6 @@ import io.github.zap.commons.vectors.Vectors;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -110,7 +109,7 @@ abstract class CollisionChunkAbstract_v1_16_R3 implements CollisionChunkView {
             while(iterator.hasNext()) {
                 BlockCollisionView snapshot = iterator.next();
 
-                if(snapshot != null && snapshot.overlaps(overlap)) {
+                if(snapshot != null && snapshot.isOverlapping(overlap)) {
                     return true;
                 }
             }
@@ -130,7 +129,7 @@ abstract class CollisionChunkAbstract_v1_16_R3 implements CollisionChunkView {
             while(iterator.hasNext()) {
                 BlockCollisionView snapshot = iterator.next();
 
-                if(snapshot != null && snapshot.overlaps(overlap)) {
+                if(snapshot != null && snapshot.isOverlapping(overlap)) {
                     shapes.add(snapshot);
                 }
             }
