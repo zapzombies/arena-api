@@ -1,6 +1,5 @@
 package io.github.zap.arenaapi.nms.v1_16_R3.world;
 
-import com.google.common.cache.CacheBuilder;
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
 import io.github.zap.arenaapi.nms.common.world.VoxelShapeWrapper;
 import net.minecraft.server.v1_16_R3.*;
@@ -12,7 +11,6 @@ import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class CollisionChunkProxy_v1_16_R3 extends CollisionChunkAbstract_v1_16_R3 {
     private static final Map<VoxelShape, VoxelShapeWrapper> SHAPE_MAP = Collections.synchronizedMap(new IdentityHashMap<>());
