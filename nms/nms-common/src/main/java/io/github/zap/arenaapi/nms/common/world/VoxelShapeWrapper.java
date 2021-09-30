@@ -4,7 +4,7 @@ import io.github.zap.commons.vectors.Bounds;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 
-public interface VoxelShapeWrapper {
+public interface VoxelShapeWrapper extends Iterable<Bounds> {
     boolean isFull();
 
     boolean isEmpty();

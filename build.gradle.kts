@@ -23,7 +23,7 @@ dependencies {
     }
     shade(project(":nms:nms-1_16_R3"))
 
-    shade("io.github.zap:zap-commons:1.0.0-SNAPSHOT-1632469850", qs())
+    shade("io.github.zap:zap-commons:1.1.0", qs())
 
     paperApi("1.16.5-R0.1-SNAPSHOT")
 

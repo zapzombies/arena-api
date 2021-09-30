@@ -1,12 +1,15 @@
 package io.github.zap.arenaapi.nms.v1_16_R3.world;
 
+import com.google.common.collect.Iterators;
 import io.github.zap.arenaapi.nms.common.world.BoxPredicate;
 import io.github.zap.arenaapi.nms.common.world.VoxelShapeWrapper;
 import io.github.zap.commons.vectors.Bounds;
 import net.minecraft.server.v1_16_R3.*;
+import org.apache.logging.log4j.core.util.ObjectArrayIterator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Iterator;
 import java.util.List;
 
 class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
@@ -88,5 +91,11 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
         }
 
         return false;
+    }
+
+    @NotNull
+    @Override
+    public Iterator<Bounds> iterator() {
+        return Iterators.forArray(shapes);
     }
 }

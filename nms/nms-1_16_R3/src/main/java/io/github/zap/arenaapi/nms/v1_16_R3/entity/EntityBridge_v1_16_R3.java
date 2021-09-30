@@ -98,7 +98,7 @@ public class EntityBridge_v1_16_R3 implements EntityBridge {
     }
 
     public @Nullable MobNavigator getNavigator(@NotNull Mob mob) {
-        //TODO: known issue with this is that zombies mobs riding regular entities (players) will not work
+        //TODO: known issue with this is that mobs riding regular entities (players) will not work
         Entity vehicle = mob.getVehicle();
         if(vehicle instanceof Mob mobVehicle) {
             return getNavigator(mobVehicle);
