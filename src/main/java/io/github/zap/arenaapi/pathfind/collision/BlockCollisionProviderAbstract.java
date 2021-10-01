@@ -220,15 +220,15 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         double deltaMinZ = Math.abs(agentZ - minZ);
         double deltaMaxZ = Math.abs(agentZ - maxZ);
 
-        double x = Math.min(deltaMinX, deltaMaxX) * signX;
-        double y = Math.min(deltaMinY, deltaMaxY) * signY;
-        double z = Math.min(deltaMinZ, deltaMaxZ) * signZ;
+        double x = Math.min(deltaMinX, deltaMaxX);
+        double y = Math.min(deltaMinY, deltaMaxY);
+        double z = Math.min(deltaMinZ, deltaMaxZ);
 
         double thisLengthSquared = x * x + y * y + z * z;
         if(thisLengthSquared < nearestLengthSquared) {
-            nearest.setX(x);
-            nearest.setY(y);
-            nearest.setZ(z);
+            nearest.setX(x * signX);
+            nearest.setY(y * signY);
+            nearest.setZ(z * signZ);
             return thisLengthSquared;
         }
 
