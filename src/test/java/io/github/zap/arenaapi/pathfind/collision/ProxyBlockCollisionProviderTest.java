@@ -5,6 +5,7 @@ import io.github.zap.commons.vectors.*;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.NumberConversions;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,7 @@ class ProxyBlockCollisionProviderTest {
     private final List<BoundingBox> fullBlock = new ArrayList<>();
     private final List<BoundingBox> tinyBlock = new ArrayList<>();
     private final List<BoundingBox> stairBlock = new ArrayList<>();
+    private final List<BoundingBox> bottomSlab = new ArrayList<>();
 
     private final Bounds fullBlockBounds = new Bounds(0, 0, 0, 1, 1, 1);
     private final Bounds tinyBlockBounds = new Bounds(0.4, 0, 0.4, 0.6, 1, 0.6);
@@ -49,6 +51,8 @@ class ProxyBlockCollisionProviderTest {
 
         stairBlock.add(new BoundingBox(0, 0.5, 0, 1, 1, 1));
         stairBlock.add(new BoundingBox(0, 0, 0, 0.5, 0.5, 1));
+
+        bottomSlab.add(new BoundingBox(0, 0, 0, 1, 0.5, 1));
     }
 
     @Test
@@ -176,14 +180,27 @@ class ProxyBlockCollisionProviderTest {
 
     @Test
     void fullAgentMovingDownNoCollision() {
-        testWalkDirection(fullAgentBounds, new ArrayList<>(), Direction.DOWN, Vectors.of(0, 0, 0), false, null);
+        testWalkDirection(fullAgentBounds, new ArrayList<>(), Direction.DOWN, false, null);
     }
 
     @Test
     void fullAgentMovingDownCollisionWithFullBlock() {
         mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, false);
-        testWalkDirection(fullAgentBounds, new ArrayList<>(), Direction.DOWN, Vectors.of(0, 1, 0),
+        testWalkDirection(fullAgentBounds.clone().shift(0, 1, 0), new ArrayList<>(), Direction.DOWN,
                 false, null);
+    }
+
+    @Test
+    void fullAgentMovingDownCollisionWithSlab() {
+        BlockCollisionView blockFeet = mockBlockAt(0, 0, 0, bottomSlab, lowerHalfBlockBounds, false);
+        testWalkDirection(fullAgentBounds.clone().shift(0, 1, 0), List.of(blockFeet), Direction.DOWN,
+                true, null);
+    }
+
+    @Test
+    void fullAgentMovingCardinallyOnSlab() {
+        BlockCollisionView blockFeet = mockBlockAt(0, 0, 0, bottomSlab, lowerHalfBlockBounds, false);
+        testCardinalSameCollision(fullAgentBounds.clone().shift(0, 0.5, 0), List.of(blockFeet), false);
     }
 
     private void assertNoModification(BoundingBox bounds, Consumer<BoundingBox> consumer) {
@@ -216,12 +233,9 @@ class ProxyBlockCollisionProviderTest {
         VoxelShapeWrapper mockVoxelShapeWrapper = Mockito.mock(VoxelShapeWrapper.class);
         Mockito.when(mockVoxelShapeWrapper.boundingBox()).thenReturn(blockBounds);
 
-        System.out.println("Size: " + voxelShapes.size());
-        System.out.println("VoxelShapeWrapper mock: " + mockVoxelShapeWrapper);
-
         Mockito.when(mockVoxelShapeWrapper.iterator()).thenAnswer(invocation -> voxelShapes.stream().map(bb ->
                 new Bounds(bb.getMinX(), bb.getMinY(), bb.getMinZ(), bb.getMaxX(),
-                bb.getMaxY(), bb.getMaxZ())).collect(Collectors.toList()).listIterator());
+                bb.getMaxY(), bb.getMaxZ())).collect(Collectors.toList()).iterator());
 
         BlockCollisionView mockBlockView = Mockito.mock(BlockCollisionView.class);
         Mockito.when(mockBlockView.collision()).thenReturn(mockVoxelShapeWrapper);
@@ -236,12 +250,15 @@ class ProxyBlockCollisionProviderTest {
     }
 
     private void testWalkDirection(BoundingBox agentBounds, List<BlockCollisionView> initialCollisions,
-                                   Direction direction, Vector3I origin, boolean collides, Vector3D expectedTranslation) {
-        CollisionChunkView chunk = mockChunkAt(origin.x() >> 4, origin.z() >> 4);
+                                   Direction direction, boolean collides, Vector3D expectedTranslation) {
+        int x = NumberConversions.floor(agentBounds.getCenterX());
+        int z = NumberConversions.floor(agentBounds.getCenterZ());
+
+        CollisionChunkView chunk = mockChunkAt(x >> 4, z >> 4);
         Mockito.when(chunk.collisionsWith(ArgumentMatchers.any())).thenReturn(initialCollisions);
 
-        BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds.clone().shift(origin.x(),
-                        origin.y(), origin.z()), Vectors.asDouble(direction));
+        BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds.clone(),
+                Vectors.asDouble(direction));
         Assertions.assertSame(collides, result.collides(), "expected collision to be " + collides + " for " +
                 "direction " + direction + " with expected translation " + expectedTranslation);
 
@@ -253,40 +270,40 @@ class ProxyBlockCollisionProviderTest {
 
     private void testCardinal(BoundingBox agentBounds, BlockCollisionView[] samples, boolean collides,
                               Vector3D... expectedTranslations) {
-        testWalkDirection(agentBounds, List.of(samples[0]), Direction.NORTH, Vectors.ZERO_INT, collides,
+        testWalkDirection(agentBounds, List.of(samples[0]), Direction.NORTH, collides,
                 expectedTranslations.length == 0 ? null : expectedTranslations[0]);
-        testWalkDirection(agentBounds, List.of(samples[1]), Direction.EAST, Vectors.ZERO_INT, collides,
+        testWalkDirection(agentBounds, List.of(samples[1]), Direction.EAST, collides,
                 expectedTranslations.length == 0 ? null : expectedTranslations[1]);
-        testWalkDirection(agentBounds, List.of(samples[2]), Direction.SOUTH, Vectors.ZERO_INT, collides,
+        testWalkDirection(agentBounds, List.of(samples[2]), Direction.SOUTH, collides,
                 expectedTranslations.length == 0 ? null : expectedTranslations[2]);
-        testWalkDirection(agentBounds, List.of(samples[3]), Direction.WEST, Vectors.ZERO_INT, collides,
+        testWalkDirection(agentBounds, List.of(samples[3]), Direction.WEST, collides,
                 expectedTranslations.length == 0 ? null : expectedTranslations[3]);
     }
 
     private void testIntercardinal(BoundingBox agentBounds, BlockCollisionView[] samples, boolean collides,
                                    Vector3D... expectedTranslations) {
-        testWalkDirection(agentBounds, List.of(samples[0], samples[1]), Direction.NORTHEAST, Vectors.ZERO_INT, collides,
+        testWalkDirection(agentBounds, List.of(samples[0], samples[1]), Direction.NORTHEAST, collides,
                 expectedTranslations.length == 0 ? null : expectedTranslations[0]);
-        testWalkDirection(agentBounds, List.of(samples[1], samples[2]), Direction.SOUTHEAST, Vectors.ZERO_INT, collides,
+        testWalkDirection(agentBounds, List.of(samples[1], samples[2]), Direction.SOUTHEAST, collides,
                 expectedTranslations.length == 0 ? null : expectedTranslations[1]);
-        testWalkDirection(agentBounds, List.of(samples[2], samples[3]), Direction.SOUTHWEST, Vectors.ZERO_INT, collides,
+        testWalkDirection(agentBounds, List.of(samples[2], samples[3]), Direction.SOUTHWEST, collides,
                 expectedTranslations.length == 0 ? null : expectedTranslations[2]);
-        testWalkDirection(agentBounds, List.of(samples[3], samples[0]), Direction.NORTHWEST, Vectors.ZERO_INT, collides,
+        testWalkDirection(agentBounds, List.of(samples[3], samples[0]), Direction.NORTHWEST, collides,
                 expectedTranslations.length == 0 ? null : expectedTranslations[3]);
     }
 
     private void testCardinalSameCollision(BoundingBox agentBounds, List<BlockCollisionView> collisions, boolean collides) {
-        testWalkDirection(agentBounds, collisions, Direction.NORTH, Vectors.ZERO_INT, collides, null);
-        testWalkDirection(agentBounds, collisions, Direction.EAST, Vectors.ZERO_INT, collides, null);
-        testWalkDirection(agentBounds, collisions, Direction.SOUTH, Vectors.ZERO_INT, collides, null);
-        testWalkDirection(agentBounds, collisions, Direction.WEST, Vectors.ZERO_INT, collides, null);
+        testWalkDirection(agentBounds, collisions, Direction.NORTH, collides, null);
+        testWalkDirection(agentBounds, collisions, Direction.EAST, collides, null);
+        testWalkDirection(agentBounds, collisions, Direction.SOUTH, collides, null);
+        testWalkDirection(agentBounds, collisions, Direction.WEST, collides, null);
     }
 
     private void testIntercardinalSameCollision(BoundingBox agentBounds, List<BlockCollisionView> collisions, boolean collides) {
-        testWalkDirection(agentBounds, collisions, Direction.NORTHEAST, Vectors.ZERO_INT, collides, null);
-        testWalkDirection(agentBounds, collisions, Direction.SOUTHEAST, Vectors.ZERO_INT, collides, null);
-        testWalkDirection(agentBounds, collisions, Direction.SOUTHWEST, Vectors.ZERO_INT, collides, null);
-        testWalkDirection(agentBounds, collisions, Direction.NORTHWEST, Vectors.ZERO_INT, collides, null);
+        testWalkDirection(agentBounds, collisions, Direction.NORTHEAST, collides, null);
+        testWalkDirection(agentBounds, collisions, Direction.SOUTHEAST, collides, null);
+        testWalkDirection(agentBounds, collisions, Direction.SOUTHWEST, collides, null);
+        testWalkDirection(agentBounds, collisions, Direction.NORTHWEST, collides, null);
     }
 
     private BlockCollisionView[] createCardinallyAdjacentTestBlocks(List<BoundingBox> blockBounds, Bounds blockBoundingBox) {
