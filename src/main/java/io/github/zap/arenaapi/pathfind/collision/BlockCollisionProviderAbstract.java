@@ -8,7 +8,6 @@ import io.github.zap.commons.vectors.*;
 import io.github.zap.commons.vectors.Vector2I;
 import io.github.zap.commons.vectors.Vector3D;
 import io.github.zap.commons.vectors.Vectors;
-import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
@@ -112,6 +111,131 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     }
 
     /*
+    checks for collisions the provided boundingbox has while moving along the specified vector, checking only those
+    BlockCollisionView objects that appear in the candidates list. views intersecting the original position of the
+    entity will be discarded.
+     */
+    private HitResult collisionCheck(BoundingBox agentBounds, double tX, double tY, double tZ,
+                                     List<BlockCollisionView> candidates) {
+        if(candidates.isEmpty()) {
+            return HitResult.NO_HIT;
+        }
+
+        double width = agentBounds.getWidthX();
+        double height = agentBounds.getHeight();
+
+        double originX = agentBounds.getCenterX();
+        double originY = agentBounds.getCenterY();
+        double originZ = agentBounds.getCenterZ();
+
+        double adjustedWidthXZ = (width * (Math.abs(tX) + Math.abs(tZ))) / 2;
+        double adjustedWidthXY = (height * (Math.abs(tX) + Math.abs(tY))) / 2;
+        double adjustedWidthYZ = (height * (Math.abs(tY) + Math.abs(tZ))) / 2;
+
+        double halfWidth = width / 2;
+        double halfHeight = height / 2;
+
+        double nearestLengthSquared = Double.MAX_VALUE;
+        boolean foundCollision = false;
+        boolean collidesAtAgent = false;
+        BlockCollisionView nearestBlock = null;
+        Vector offset = new Vector();
+
+        for(BlockCollisionView view : candidates) {
+            if(view.isOverlapping(agentBounds)) {
+                collidesAtAgent = true;
+                continue;
+            }
+
+            for(Bounds shapeBounds : view.collision()) {
+                double minX = (shapeBounds.minX() + view.x()) - originX;
+                double minY = (shapeBounds.minY() + view.y()) - originY;
+                double minZ = (shapeBounds.minZ() + view.z()) - originZ;
+
+                double maxX = (shapeBounds.maxX() + view.x()) - originX;
+                double maxY = (shapeBounds.maxY() + view.y()) - originY;
+                double maxZ = (shapeBounds.maxZ() + view.z()) - originZ;
+
+                if(checkPair(adjustedWidthXZ, tX, tZ, minX, minZ, maxX, maxZ) &&
+                        checkPair(adjustedWidthXY, tX, tY, minX, minY, maxX, maxY) &&
+                        checkPair(adjustedWidthYZ, tZ, tY, minZ, minY, maxZ, maxY)) {
+                    double thisDistance;
+                    if((thisDistance = processCollision(halfWidth, halfHeight, tX, tY, tZ,
+                            minX, minY, minZ, maxX, maxY, maxZ, offset, nearestLengthSquared))!= -1) {
+                        nearestLengthSquared = thisDistance;
+                        nearestBlock = view;
+                        foundCollision = true;
+                    }
+                }
+            }
+        }
+
+        return new HitResult(foundCollision, collidesAtAgent, nearestBlock, Vectors.of(offset));
+    }
+
+    /*
+    checks for collisions when travelling along a certain plane. as checkPlane expects the min and max vectors to be
+    ordered in a certain way, performs a simple check on the 'slope' of the inequalities used for representing the
+    moving bounding box (see checkPlane)
+     */
+    private boolean checkPair(double adjustedSize, double dirA, double dirB, double minA, double minB,
+                              double maxA, double maxB) {
+        if(dirA == 0 && dirB == 0) { //degenerate case; assume true
+            return true;
+        }
+
+        if(dirA * dirB < 0) {
+            return checkPlane(adjustedSize, dirA, dirB, minA, minB, maxA, maxB);
+        }
+        else {
+            return checkPlane(adjustedSize, dirA, dirB, maxA, minB, minA, maxB);
+        }
+    }
+
+    /*
+    computes the translation vector from a bounding box with width halfWidth * 2, height halfHeight * 2 along the vector
+    represented by <dirX, dirY, dirZ> to a (entity origin relative) bounds represented by the two points
+    (minX, minY, minZ) and (maxX, maxY, maxZ). if the distance (magnitude of the translation vector) is smaller than
+    nearestLengthSquared, vector nearest will have no data written to it, and the function will return -1. otherwise,
+    nearest will contain the new translation vector, and its magnitude will be returned (which must be less than
+    nearestLengthSquared
+     */
+    private double processCollision(double halfWidth, double halfHeight, double dirX, double dirY, double dirZ,
+                                    double minX, double minY, double minZ, double maxX, double maxY, double maxZ,
+                                    Vector nearest, double nearestLengthSquared) {
+        double signX = Math.signum(dirX);
+        double signY = Math.signum(dirY);
+        double signZ = Math.signum(dirZ);
+
+        double agentX = halfWidth * signX;
+        double agentY = halfHeight * signY;
+        double agentZ = halfWidth * signZ;
+
+        double deltaMinX = Math.abs(agentX - minX);
+        double deltaMaxX = Math.abs(agentX - maxX);
+
+        double deltaMinY = Math.abs(agentY - minY);
+        double deltaMaxY = Math.abs(agentY - maxY);
+
+        double deltaMinZ = Math.abs(agentZ - minZ);
+        double deltaMaxZ = Math.abs(agentZ - maxZ);
+
+        double x = Math.min(deltaMinX, deltaMaxX);
+        double y = Math.min(deltaMinY, deltaMaxY);
+        double z = Math.min(deltaMinZ, deltaMaxZ);
+
+        double thisLengthSquared = x * x + y * y + z * z;
+        if(thisLengthSquared < nearestLengthSquared) {
+            nearest.setX(x * signX);
+            nearest.setY(y * signY);
+            nearest.setZ(z * signZ);
+            return thisLengthSquared;
+        }
+
+        return -1;
+    }
+
+    /*
     this simple algorithm determines if a given bounds, denoted by a pair of 2d points, intersects the path traced by
     a bounding box moving in the direction denoted by the vector <dirX, dirZ>. the width of the bounding box is given
     by adjustedWidth, whose value must be precalculated as follows:
@@ -141,127 +265,9 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     may be zero if the other is non-zero). minX, minZ, maxX, and maxZ must be finite and have an additional special
     consideration that a vector drawn between them must NOT belong to the same or opposite quadrant as the direction
     vector
-     */
-    private HitResult collisionCheck(BoundingBox agentBounds, double dirX, double dirY, double dirZ,
-                                     Iterable<BlockCollisionView> candidates) {
-        double width = agentBounds.getWidthX();
-        double height = agentBounds.getHeight();
-
-        double originX = agentBounds.getCenterX();
-        double originY = agentBounds.getCenterY();
-        double originZ = agentBounds.getCenterZ();
-
-        double adjustedWidth = (width * (Math.abs(dirX) + Math.abs(dirZ))) / 2;
-        double adjustedHeight = (height * (Math.abs(dirX) + Math.abs(dirY))) / 2;
-
-        double halfWidth = width / 2;
-        double halfHeight = height / 2;
-
-        double dfZ = dirX * dirZ;
-        double dfY = dirX * dirY;
-
-        double nearestLengthSquared = Double.MAX_VALUE;
-        boolean foundCollision = false;
-        boolean collidesAtAgent = false;
-        BlockCollisionView nearestBlock = null;
-        Vector offset = new Vector();
-
-        for(BlockCollisionView view : candidates) {
-            if(view.isOverlapping(agentBounds)) {
-                collidesAtAgent = true;
-                continue;
-            }
-
-            for(Bounds shapeBounds : view.collision()) {
-                double x, y, z, x2, y2, z2;
-
-                if(dfZ < 0) {
-                    x = (shapeBounds.minX() + view.x()) - originX;
-                    z = (shapeBounds.minZ() + view.z()) - originZ;
-
-                    x2 = (shapeBounds.maxX() + view.x()) - originX;
-                    z2 = (shapeBounds.maxZ() + view.z()) - originZ;
-                }
-                else {
-                    x = (shapeBounds.maxX() + view.x()) - originX;
-                    z = (shapeBounds.minZ() + view.z()) - originZ;
-
-                    x2 = (shapeBounds.minX() + view.x()) - originX;
-                    z2 = (shapeBounds.maxZ() + view.z()) - originZ;
-                }
-
-                if(checkBounds(adjustedWidth, dirX, dirZ, x, z, x2, z2)) {
-                    double lengthSquared = -1;
-
-                    if(dirY == 0) { //no need to check y if we are moving horizontally
-                        lengthSquared = processCollision(halfWidth, halfHeight, dirX, dirY, dirZ, x, 0, z,
-                                x2, 0, z2, offset, nearestLengthSquared);
-                    }
-                    else { //calculate y
-                        if(dfY < 0) {
-                            y = (shapeBounds.minY() + view.y()) - originY;
-                            y2 = (shapeBounds.maxY() + view.y()) - originY;
-                        }
-                        else {
-                            y = (shapeBounds.minY() + view.y()) - originY;
-                            y2 = (shapeBounds.maxY() + view.y()) - originY;
-                        }
-
-                        if(checkBounds(adjustedHeight, dirX, dirY, x, y, x2, y2)) {
-                            lengthSquared = processCollision(halfWidth, halfHeight, dirX, dirY, dirZ,
-                                    x, y, z, x2, y2, z2, offset, nearestLengthSquared);
-                        }
-                    }
-
-                    if(lengthSquared != -1) {
-                        nearestLengthSquared = lengthSquared;
-                        nearestBlock = view;
-                        foundCollision = true;
-                    }
-                }
-            }
-        }
-
-        return new HitResult(foundCollision, collidesAtAgent, nearestBlock, Vectors.of(offset));
-    }
-
-    private double processCollision(double halfWidth, double halfHeight, double dirX, double dirY, double dirZ,
-                                    double minX, double minY, double minZ, double maxX, double maxY, double maxZ,
-                                    Vector nearest, double nearestLengthSquared) {
-        double signX = Math.signum(dirX);
-        double signY = Math.signum(dirY);
-        double signZ = Math.signum(dirZ);
-
-        double agentX = halfWidth * signX;
-        double agentY = halfHeight * signY;
-        double agentZ = halfWidth * signZ;
-
-        double deltaMinX = Math.abs(agentX - minX);
-        double deltaMaxX = Math.abs(agentX - maxX);
-
-        double deltaMinY = Math.abs(agentY - minY);
-        double deltaMaxY = Math.abs(agentY - maxY);
-
-        double deltaMinZ = Math.abs(agentZ - minZ);
-        double deltaMaxZ = Math.abs(agentZ - maxZ);
-
-        double x = Math.min(deltaMinX, deltaMaxX) * signX;
-        double y = Math.min(deltaMinY, deltaMaxY) * signY;
-        double z = Math.min(deltaMinZ, deltaMaxZ) * signZ;
-
-        double thisLengthSquared = x * x + y * y + z * z;
-        if(thisLengthSquared < nearestLengthSquared || nearest.equals(ZERO)) {
-            nearest.setX(x);
-            nearest.setY(y);
-            nearest.setZ(z);
-            return thisLengthSquared;
-        }
-
-        return -1;
-    }
-
-    private boolean checkBounds(double adjustedSize, double dirA, double dirB, double minA, double minB,
-                                double maxA, double maxB) {
+    */
+    private boolean checkPlane(double adjustedSize, double dirA, double dirB, double minA, double minB,
+                               double maxA, double maxB) {
         double bMinusAMin = (minB * dirA) - (minA * dirB);
         if(bMinusAMin >= adjustedSize) { //!minInFirst
             return (maxB * dirA) - (maxA * dirB) < adjustedSize;  //... && maxInFirst
