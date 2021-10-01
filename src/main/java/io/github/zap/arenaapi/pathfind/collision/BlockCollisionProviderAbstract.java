@@ -8,7 +8,6 @@ import io.github.zap.commons.vectors.*;
 import io.github.zap.commons.vectors.Vector2I;
 import io.github.zap.commons.vectors.Vector3D;
 import io.github.zap.commons.vectors.Vectors;
-import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
@@ -143,7 +142,11 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     vector
      */
     private HitResult collisionCheck(BoundingBox agentBounds, double dirX, double dirY, double dirZ,
-                                     Iterable<BlockCollisionView> candidates) {
+                                     List<BlockCollisionView> candidates) {
+        if(candidates.isEmpty()) {
+            return HitResult.NO_HIT;
+        }
+
         double width = agentBounds.getWidthX();
         double height = agentBounds.getHeight();
 
@@ -151,14 +154,12 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         double originY = agentBounds.getCenterY();
         double originZ = agentBounds.getCenterZ();
 
-        double adjustedWidth = (width * (Math.abs(dirX) + Math.abs(dirZ))) / 2;
-        double adjustedHeight = (height * (Math.abs(dirX) + Math.abs(dirY))) / 2;
+        double adjustedWidthXZ = (width * (Math.abs(dirX) + Math.abs(dirZ))) / 2;
+        double adjustedWidthXY = (height * (Math.abs(dirX) + Math.abs(dirY))) / 2;
+        double adjustedWidthYZ = (height * (Math.abs(dirY) + Math.abs(dirZ))) / 2;
 
         double halfWidth = width / 2;
         double halfHeight = height / 2;
-
-        double dfZ = dirX * dirZ;
-        double dfY = dirX * dirY;
 
         double nearestLengthSquared = Double.MAX_VALUE;
         boolean foundCollision = false;
@@ -173,48 +174,21 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
             }
 
             for(Bounds shapeBounds : view.collision()) {
-                double x, y, z, x2, y2, z2;
+                double minX = (shapeBounds.minX() + view.x()) - originX;
+                double minY = (shapeBounds.minY() + view.y()) - originY;
+                double minZ = (shapeBounds.minZ() + view.z()) - originZ;
 
-                if(dfZ < 0) {
-                    x = (shapeBounds.minX() + view.x()) - originX;
-                    z = (shapeBounds.minZ() + view.z()) - originZ;
+                double maxX = (shapeBounds.maxX() + view.x()) - originX;
+                double maxY = (shapeBounds.maxY() + view.y()) - originY;
+                double maxZ = (shapeBounds.maxZ() + view.z()) - originZ;
 
-                    x2 = (shapeBounds.maxX() + view.x()) - originX;
-                    z2 = (shapeBounds.maxZ() + view.z()) - originZ;
-                }
-                else {
-                    x = (shapeBounds.maxX() + view.x()) - originX;
-                    z = (shapeBounds.minZ() + view.z()) - originZ;
-
-                    x2 = (shapeBounds.minX() + view.x()) - originX;
-                    z2 = (shapeBounds.maxZ() + view.z()) - originZ;
-                }
-
-                if(checkBounds(adjustedWidth, dirX, dirZ, x, z, x2, z2)) {
-                    double lengthSquared = -1;
-
-                    if(dirY == 0) { //no need to check y if we are moving horizontally
-                        lengthSquared = processCollision(halfWidth, halfHeight, dirX, dirY, dirZ, x, 0, z,
-                                x2, 0, z2, offset, nearestLengthSquared);
-                    }
-                    else { //calculate y
-                        if(dfY < 0) {
-                            y = (shapeBounds.minY() + view.y()) - originY;
-                            y2 = (shapeBounds.maxY() + view.y()) - originY;
-                        }
-                        else {
-                            y = (shapeBounds.minY() + view.y()) - originY;
-                            y2 = (shapeBounds.maxY() + view.y()) - originY;
-                        }
-
-                        if(checkBounds(adjustedHeight, dirX, dirY, x, y, x2, y2)) {
-                            lengthSquared = processCollision(halfWidth, halfHeight, dirX, dirY, dirZ,
-                                    x, y, z, x2, y2, z2, offset, nearestLengthSquared);
-                        }
-                    }
-
-                    if(lengthSquared != -1) {
-                        nearestLengthSquared = lengthSquared;
+                if(checkPair(adjustedWidthXZ, dirX, dirZ, minX, minZ, maxX, maxZ) &&
+                        checkPair(adjustedWidthXY, dirX, dirY, minX, minY, maxX, maxY) &&
+                        checkPair(adjustedWidthYZ, dirZ, dirY, minZ, minY, maxZ, maxY)) {
+                    double thisDistance;
+                    if((thisDistance = processCollision(halfWidth, halfHeight, dirX, dirY, dirZ,
+                            minX, minY, minZ, maxX, maxY, maxZ, offset, nearestLengthSquared))!= -1) {
+                        nearestLengthSquared = thisDistance;
                         nearestBlock = view;
                         foundCollision = true;
                     }
@@ -223,6 +197,21 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         }
 
         return new HitResult(foundCollision, collidesAtAgent, nearestBlock, Vectors.of(offset));
+    }
+
+    private boolean checkPair(double adjustedSize, double dirA, double dirB, double minA, double minB,
+                              double maxA, double maxB) {
+        if(dirA == 0 && dirB == 0) { //degenerate case; assume true
+            return true;
+        }
+
+        double fac = dirA * dirB;
+        if(fac < 0) {
+            return checkPlane(adjustedSize, dirA, dirB, minA, minB, maxA, maxB);
+        }
+        else {
+            return checkPlane(adjustedSize, dirA, dirB, maxA, minB, minA, maxB);
+        }
     }
 
     private double processCollision(double halfWidth, double halfHeight, double dirX, double dirY, double dirZ,
@@ -250,7 +239,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         double z = Math.min(deltaMinZ, deltaMaxZ) * signZ;
 
         double thisLengthSquared = x * x + y * y + z * z;
-        if(thisLengthSquared < nearestLengthSquared || nearest.equals(ZERO)) {
+        if(thisLengthSquared < nearestLengthSquared) {
             nearest.setX(x);
             nearest.setY(y);
             nearest.setZ(z);
@@ -260,8 +249,8 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         return -1;
     }
 
-    private boolean checkBounds(double adjustedSize, double dirA, double dirB, double minA, double minB,
-                                double maxA, double maxB) {
+    private boolean checkPlane(double adjustedSize, double dirA, double dirB, double minA, double minB,
+                               double maxA, double maxB) {
         double bMinusAMin = (minB * dirA) - (minA * dirB);
         if(bMinusAMin >= adjustedSize) { //!minInFirst
             return (maxB * dirA) - (maxA * dirB) < adjustedSize;  //... && maxInFirst
