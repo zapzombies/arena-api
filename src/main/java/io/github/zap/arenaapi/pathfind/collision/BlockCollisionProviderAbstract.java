@@ -111,37 +111,11 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     }
 
     /*
-    this simple algorithm determines if a given bounds, denoted by a pair of 2d points, intersects the path traced by
-    a bounding box moving in the direction denoted by the vector <dirX, dirZ>. the width of the bounding box is given
-    by adjustedWidth, whose value must be precalculated as follows:
-
-    (width * (Math.abs(dirX) + Math.abs(dirZ))) / 2
-
-    the function works by testing points (min, max) against a pair of inequalities:
-
-    First: (z * dirX) - (x * dirZ) < w
-    Second: (z * dirX) - (x * dirZ) > -w
-
-    the function follows the truth table shown below. a question mark denotes "don't cares"
-
-    minInFirst   |   minInSecond   |   maxInFirst   |   maxInSecond   |   collides
-    0                1                 0                ?                 0
-    0                1                 1                ?                 1
-    1                0                 ?                0                 0
-    1                0                 ?                1                 1  //same as #2 but inverted
-    1                1                 ?                ?                 1
-
-    some combinations of values are not possible given valid inputs, and thus they are not present in the truth table
-    and are not tested for either. for example, a point that satisfies neither of the inequalities is not possible for
-    a valid adjustedWidth parameter.
-
-    more specifically, regarding invalid input, all double parameters must be finite, and adjustedWidth must be greater
-    than 0. dirX and dirZ may be any pair of integers, including negative numbers, but they cannot both be zero (one
-    may be zero if the other is non-zero). minX, minZ, maxX, and maxZ must be finite and have an additional special
-    consideration that a vector drawn between them must NOT belong to the same or opposite quadrant as the direction
-    vector
+    checks for collisions the provided boundingbox has while moving along the specified vector, checking only those
+    BlockCollisionView objects that appear in the candidates list. views intersecting the original position of the
+    entity will be discarded.
      */
-    private HitResult collisionCheck(BoundingBox agentBounds, double dirX, double dirY, double dirZ,
+    private HitResult collisionCheck(BoundingBox agentBounds, double tX, double tY, double tZ,
                                      List<BlockCollisionView> candidates) {
         if(candidates.isEmpty()) {
             return HitResult.NO_HIT;
@@ -154,9 +128,9 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         double originY = agentBounds.getCenterY();
         double originZ = agentBounds.getCenterZ();
 
-        double adjustedWidthXZ = (width * (Math.abs(dirX) + Math.abs(dirZ))) / 2;
-        double adjustedWidthXY = (height * (Math.abs(dirX) + Math.abs(dirY))) / 2;
-        double adjustedWidthYZ = (height * (Math.abs(dirY) + Math.abs(dirZ))) / 2;
+        double adjustedWidthXZ = (width * (Math.abs(tX) + Math.abs(tZ))) / 2;
+        double adjustedWidthXY = (height * (Math.abs(tX) + Math.abs(tY))) / 2;
+        double adjustedWidthYZ = (height * (Math.abs(tY) + Math.abs(tZ))) / 2;
 
         double halfWidth = width / 2;
         double halfHeight = height / 2;
@@ -182,11 +156,11 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
                 double maxY = (shapeBounds.maxY() + view.y()) - originY;
                 double maxZ = (shapeBounds.maxZ() + view.z()) - originZ;
 
-                if(checkPair(adjustedWidthXZ, dirX, dirZ, minX, minZ, maxX, maxZ) &&
-                        checkPair(adjustedWidthXY, dirX, dirY, minX, minY, maxX, maxY) &&
-                        checkPair(adjustedWidthYZ, dirZ, dirY, minZ, minY, maxZ, maxY)) {
+                if(checkPair(adjustedWidthXZ, tX, tZ, minX, minZ, maxX, maxZ) &&
+                        checkPair(adjustedWidthXY, tX, tY, minX, minY, maxX, maxY) &&
+                        checkPair(adjustedWidthYZ, tZ, tY, minZ, minY, maxZ, maxY)) {
                     double thisDistance;
-                    if((thisDistance = processCollision(halfWidth, halfHeight, dirX, dirY, dirZ,
+                    if((thisDistance = processCollision(halfWidth, halfHeight, tX, tY, tZ,
                             minX, minY, minZ, maxX, maxY, maxZ, offset, nearestLengthSquared))!= -1) {
                         nearestLengthSquared = thisDistance;
                         nearestBlock = view;
@@ -199,14 +173,18 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         return new HitResult(foundCollision, collidesAtAgent, nearestBlock, Vectors.of(offset));
     }
 
+    /*
+    checks for collisions when travelling along a certain plane. as checkPlane expects the min and max vectors to be
+    ordered in a certain way, performs a simple check on the 'slope' of the inequalities used for representing the
+    moving bounding box (see checkPlane)
+     */
     private boolean checkPair(double adjustedSize, double dirA, double dirB, double minA, double minB,
                               double maxA, double maxB) {
         if(dirA == 0 && dirB == 0) { //degenerate case; assume true
             return true;
         }
 
-        double fac = dirA * dirB;
-        if(fac < 0) {
+        if(dirA * dirB < 0) {
             return checkPlane(adjustedSize, dirA, dirB, minA, minB, maxA, maxB);
         }
         else {
@@ -214,6 +192,14 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         }
     }
 
+    /*
+    computes the translation vector from a bounding box with width halfWidth * 2, height halfHeight * 2 along the vector
+    represented by <dirX, dirY, dirZ> to a (entity origin relative) bounds represented by the two points
+    (minX, minY, minZ) and (maxX, maxY, maxZ). if the distance (magnitude of the translation vector) is smaller than
+    nearestLengthSquared, vector nearest will have no data written to it, and the function will return -1. otherwise,
+    nearest will contain the new translation vector, and its magnitude will be returned (which must be less than
+    nearestLengthSquared
+     */
     private double processCollision(double halfWidth, double halfHeight, double dirX, double dirY, double dirZ,
                                     double minX, double minY, double minZ, double maxX, double maxY, double maxZ,
                                     Vector nearest, double nearestLengthSquared) {
@@ -249,6 +235,37 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         return -1;
     }
 
+    /*
+    this simple algorithm determines if a given bounds, denoted by a pair of 2d points, intersects the path traced by
+    a bounding box moving in the direction denoted by the vector <dirX, dirZ>. the width of the bounding box is given
+    by adjustedWidth, whose value must be precalculated as follows:
+
+    (width * (Math.abs(dirX) + Math.abs(dirZ))) / 2
+
+    the function works by testing points (min, max) against a pair of inequalities:
+
+    First: (z * dirX) - (x * dirZ) < w
+    Second: (z * dirX) - (x * dirZ) > -w
+
+    the function follows the truth table shown below. a question mark denotes "don't cares"
+
+    minInFirst   |   minInSecond   |   maxInFirst   |   maxInSecond   |   collides
+    0                1                 0                ?                 0
+    0                1                 1                ?                 1
+    1                0                 ?                0                 0
+    1                0                 ?                1                 1  //same as #2 but inverted
+    1                1                 ?                ?                 1
+
+    some combinations of values are not possible given valid inputs, and thus they are not present in the truth table
+    and are not tested for either. for example, a point that satisfies neither of the inequalities is not possible for
+    a valid adjustedWidth parameter.
+
+    more specifically, regarding invalid input, all double parameters must be finite, and adjustedWidth must be greater
+    than 0. dirX and dirZ may be any pair of integers, including negative numbers, but they cannot both be zero (one
+    may be zero if the other is non-zero). minX, minZ, maxX, and maxZ must be finite and have an additional special
+    consideration that a vector drawn between them must NOT belong to the same or opposite quadrant as the direction
+    vector
+    */
     private boolean checkPlane(double adjustedSize, double dirA, double dirB, double minA, double minB,
                                double maxA, double maxB) {
         double bMinusAMin = (minB * dirA) - (minA * dirB);
