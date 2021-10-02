@@ -4,6 +4,7 @@ import io.github.zap.arenaapi.nms.common.world.*;
 import io.github.zap.commons.vectors.*;
 import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.NumberConversions;
 import org.junit.jupiter.api.Assertions;
