@@ -75,20 +75,8 @@ class PathOperationImpl implements PathOperation {
                 }
             }
             else {
-                double halfWidth = agent.width() / 2;
-                BoundingBox agentBounds = new BoundingBox(agent.x() - halfWidth, agent.y(), agent.z() - halfWidth,
-                        agent.x() + halfWidth, agent.y() + agent.height(), agent.z() + halfWidth);
-
-                BlockCollisionView highest = Utils.highestBlockBelow(context.blockProvider(), agentBounds);
-
-                if(highest == null) {
-                    complete(false);
-                    return true;
-                }
-
-                currentNode = new PathNodeImpl(Vectors.of(NumberConversions.floor(agent.x()),
-                        highest.collision().isFull() ? highest.y() + 1 : NumberConversions.floor(highest.exactY()),
-                        NumberConversions.floor(agent.z())));
+                currentNode = new PathNodeImpl(NumberConversions.floor(agent.x()), NumberConversions.floor(agent.y()),
+                        NumberConversions.floor(agent.z()));
                 currentNode.score.set(0, heuristicCalculator.compute(context, currentNode, destination));
                 bestFound = currentNode;
             }
