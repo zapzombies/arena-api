@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -71,26 +73,26 @@ class ProxyBlockCollisionProviderTest {
 
     @Test
     void fullAgentMovingCardinalCollisionWithFullCardinalBlocks() {
-        testCardinal(fullAgentBounds, createCardinallyAdjacentTestBlocks(fullBlock, fullBlockBounds), true,
+        testCardinal(fullAgentBounds, createCardinallyAdjacentTestBlocks(fullBlock, fullBlockBounds, fullAgentBounds, true), true,
                 Vectors.ZERO_DOUBLE, Vectors.ZERO_DOUBLE, Vectors.ZERO_DOUBLE, Vectors.ZERO_DOUBLE);
     }
 
     @Test
     void fullAgentMovingIntercardinalCollisionWithFullCardinalBlocks() {
-        testIntercardinal(fullAgentBounds, createCardinallyAdjacentTestBlocks(fullBlock, fullBlockBounds), true,
+        testIntercardinal(fullAgentBounds, createCardinallyAdjacentTestBlocks(fullBlock, fullBlockBounds, fullAgentBounds, true), true,
                 Vectors.ZERO_DOUBLE, Vectors.ZERO_DOUBLE, Vectors.ZERO_DOUBLE, Vectors.ZERO_DOUBLE);
     }
 
     @Test
     void fullAgentMovingCardinalCollisionWithTinyCardinalBlocks() {
-        testCardinal(fullAgentBounds, createCardinallyAdjacentTestBlocks(tinyBlock, tinyBlockBounds), true,
+        testCardinal(fullAgentBounds, createCardinallyAdjacentTestBlocks(tinyBlock, tinyBlockBounds, fullAgentBounds,true), true,
                 Vectors.of(0, 0, -0.4), Vectors.of(0.4, 0, 0),
                 Vectors.of(0, 0, 0.4), Vectors.of(-0.4, 0, 0));
     }
 
     @Test
     void fullAgentMovingIntercardinalCollisionWithTinyCardinalBlocks() {
-        testIntercardinal(fullAgentBounds, createCardinallyAdjacentTestBlocks(tinyBlock, tinyBlockBounds), true,
+        testIntercardinal(fullAgentBounds, createCardinallyAdjacentTestBlocks(tinyBlock, tinyBlockBounds, fullAgentBounds, true), true,
                 Vectors.of(0.4, 0, -0.4), Vectors.of(0.4, 0, 0.4),
                 Vectors.of(-0.4, 0, 0.4), Vectors.of(-0.4, 0, -0.4));
     }
@@ -107,72 +109,80 @@ class ProxyBlockCollisionProviderTest {
 
     @Test
     void tinyAgentMovingCardinalCollisionWithFullCardinalBlocks() {
-        testCardinal(tinyAgentBounds, createCardinallyAdjacentTestBlocks(fullBlock, fullBlockBounds), true,
+        testCardinal(tinyAgentBounds, createCardinallyAdjacentTestBlocks(fullBlock, fullBlockBounds, tinyAgentBounds, true), true,
                 Vectors.of(0, 0, -0.4), Vectors.of(0.4, 0, 0),
                 Vectors.of(0, 0, 0.4), Vectors.of(-0.4, 0, 0));
     }
 
     @Test
     void tinyAgentMovingIntercardinalCollisionWithFullCardinalBlocks() {
-        testIntercardinal(tinyAgentBounds, createCardinallyAdjacentTestBlocks(fullBlock, fullBlockBounds), true,
+        testIntercardinal(tinyAgentBounds, createCardinallyAdjacentTestBlocks(fullBlock, fullBlockBounds, tinyAgentBounds, true), true,
                 Vectors.of(0.4, 0, -0.4), Vectors.of(0.4, 0, 0.4),
                 Vectors.of(-0.4, 0, 0.4), Vectors.of(-0.4, 0, -0.4));
     }
 
     @Test
     void tinyAgentMovingCardinalCollisionWithTinyCardinalBlocks() {
-        testCardinal(tinyAgentBounds, createCardinallyAdjacentTestBlocks(tinyBlock, tinyBlockBounds), true,
+        testCardinal(tinyAgentBounds, createCardinallyAdjacentTestBlocks(tinyBlock, tinyBlockBounds, tinyAgentBounds, true), true,
                 Vectors.of(0, 0, -0.8), Vectors.of(0.8, 0, 0),
                 Vectors.of(0, 0, 0.8), Vectors.of(-0.8, 0, 0));
     }
 
     @Test
     void tinyAgentMovingIntercardinalNoCollisionWithTinyCardinalBlocks() {
-        testIntercardinal(tinyAgentBounds, createCardinallyAdjacentTestBlocks(tinyBlock, tinyBlockBounds), false);
+        testIntercardinal(tinyAgentBounds, createCardinallyAdjacentTestBlocks(tinyBlock, tinyBlockBounds, tinyAgentBounds,
+                true), false);
     }
 
     @Test
     void fullAgentMovingCardinalNoCollisionFullBlockOverlappingFeet() {
-        BlockCollisionView block = mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, true);
+        BlockCollisionView block = mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, fullAgentBounds, true,
+                true);
         testCardinalSameCollision(fullAgentBounds, List.of(block), false);
     }
 
     @Test
     void fullAgentMovingIntercardinalNoCollisionFullBlockOverlappingFeet() {
-        BlockCollisionView block = mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds,true);
+        BlockCollisionView block = mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, fullAgentBounds,true,
+                true);
         testIntercardinalSameCollision(fullAgentBounds, List.of(block), false);
     }
 
     @Test
     void fullAgentMovingCardinalNoCollisionFullBlockOverlappingFeetAndHead() {
-        BlockCollisionView blockWaist = mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, true);
-        BlockCollisionView blockHead = mockBlockAt(0, 1, 0, fullBlock, fullBlockBounds, true);
+        BlockCollisionView blockWaist = mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, fullAgentBounds, true,
+                true);
+        BlockCollisionView blockHead = mockBlockAt(0, 1, 0, fullBlock, fullBlockBounds, fullAgentBounds, true,
+                true);
         testCardinalSameCollision(fullAgentBounds, List.of(blockWaist, blockHead), false);
     }
 
     @Test
     void fullAgentMovingIntercardinalNoCollisionFullBlockOverlappingFeetAndHead() {
-        BlockCollisionView blockWaist = mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds,true);
-        BlockCollisionView blockHead = mockBlockAt(0, 1, 0, fullBlock, fullBlockBounds,true);
+        BlockCollisionView blockWaist = mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, fullAgentBounds,true,
+                true);
+        BlockCollisionView blockHead = mockBlockAt(0, 1, 0, fullBlock, fullBlockBounds, fullAgentBounds,true,
+                true);
         testIntercardinalSameCollision(fullAgentBounds, List.of(blockWaist, blockHead), false);
     }
 
     @Test
     void tallAgentMovingCardinalNoCollisionStairsOverlappingHead() {
-        BlockCollisionView blockHead = mockBlockAt(0, 2, 0, stairBlock, fullBlockBounds,true);
+        BlockCollisionView blockHead = mockBlockAt(0, 2, 0, stairBlock, fullBlockBounds, tallAgentBounds,
+                true, true);
         testCardinalSameCollision(tallAgentBounds, List.of(blockHead), false);
     }
 
     @Test
     void tallAgentMovingCardinalNoCollisionStairsOverlappingFeetAndHead() {
-        BlockCollisionView blockHead = mockBlockAt(0, 2, 0, stairBlock, fullBlockBounds,true);
-        BlockCollisionView blockFeet = mockBlockAt(0, 0, 0, stairBlock, fullBlockBounds,true);
+        BlockCollisionView blockHead = mockBlockAt(0, 2, 0, stairBlock, fullBlockBounds, tallAgentBounds,true, true);
+        BlockCollisionView blockFeet = mockBlockAt(0, 0, 0, stairBlock, fullBlockBounds, tallAgentBounds,true, true);
         testCardinalSameCollision(tallAgentBounds, List.of(blockHead, blockFeet), false);
     }
 
     @Test
     void fullAgentMovingCardinalNoCollisionFullBlockAboveHead() {
-        mockBlockAt(0, 2, 0, fullBlock, fullBlockBounds, false);
+        mockBlockAt(0, 2, 0, fullBlock, fullBlockBounds, fullAgentBounds, false, false);
         testCardinalSameCollision(fullAgentBounds, new ArrayList<>(), false);
     }
 
@@ -183,22 +193,25 @@ class ProxyBlockCollisionProviderTest {
 
     @Test
     void fullAgentMovingDownCollisionWithFullBlock() {
-        mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, false);
-        testWalkDirection(fullAgentBounds.clone().shift(0, 1, 0), new ArrayList<>(), Direction.DOWN,
-                true, null);
+        BoundingBox boundingBox = fullAgentBounds.clone().shift(0, 1, 0);
+        mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, boundingBox, false, true);
+        testWalkDirection(boundingBox, new ArrayList<>(), Direction.DOWN, true, null);
     }
 
     @Test
     void fullAgentMovingDownCollisionWithSlab() {
-        BlockCollisionView blockFeet = mockBlockAt(0, 0, 0, bottomSlab, lowerHalfBlockBounds, false);
-        testWalkDirection(fullAgentBounds.clone().shift(0, 1, 0), List.of(blockFeet), Direction.DOWN,
-                true, null);
+        BoundingBox bounds = fullAgentBounds.clone().shift(0, 1, 0);
+        BlockCollisionView blockFeet = mockBlockAt(0, 0, 0, bottomSlab, lowerHalfBlockBounds,
+                bounds, false, true);
+        testWalkDirection(bounds, List.of(blockFeet), Direction.DOWN, true, null);
     }
 
     @Test
     void fullAgentMovingCardinallyOnSlab() {
-        BlockCollisionView blockFeet = mockBlockAt(0, 0, 0, bottomSlab, lowerHalfBlockBounds, false);
-        testCardinalSameCollision(fullAgentBounds.clone().shift(0, 0.5, 0), List.of(blockFeet), false);
+        BoundingBox boundingBox = fullAgentBounds.clone().shift(0, 0.5, 0);
+        BlockCollisionView blockFeet = mockBlockAt(0, 0, 0, bottomSlab, lowerHalfBlockBounds,
+                boundingBox, false, false);
+        testCardinalSameCollision(boundingBox, List.of(blockFeet), false);
     }
 
     private void assertNoModification(BoundingBox bounds, Consumer<BoundingBox> consumer) {
@@ -225,19 +238,26 @@ class ProxyBlockCollisionProviderTest {
     }
 
     private BlockCollisionView mockBlockAt(int x, int y, int z, List<BoundingBox> voxelShapes, Bounds blockBounds,
-                                           boolean overlapsAtAgent) {
+                                           BoundingBox agentBounds, boolean overlapsAtAgent, boolean overlapsOnceExpanded) {
         CollisionChunkView mockChunkView = mockChunkAt(x >> 4, z >> 4);
 
         VoxelShapeWrapper mockVoxelShapeWrapper = Mockito.mock(VoxelShapeWrapper.class);
         Mockito.when(mockVoxelShapeWrapper.boundingBox()).thenReturn(blockBounds);
 
         Mockito.when(mockVoxelShapeWrapper.iterator()).thenAnswer(invocation -> voxelShapes.stream().map(bb ->
-                new Bounds(bb.getMinX(), bb.getMinY(), bb.getMinZ(), bb.getMaxX(),
-                bb.getMaxY(), bb.getMaxZ())).collect(Collectors.toList()).iterator());
+                new Bounds(bb.getMinX(), bb.getMinY(), bb.getMinZ(), bb.getMaxX(), bb.getMaxY(), bb.getMaxZ()))
+                .collect(Collectors.toList()).iterator());
 
         BlockCollisionView mockBlockView = Mockito.mock(BlockCollisionView.class);
         Mockito.when(mockBlockView.collision()).thenReturn(mockVoxelShapeWrapper);
-        Mockito.when(mockBlockView.overlaps(ArgumentMatchers.any())).thenReturn(overlapsAtAgent);
+        Mockito.when(mockBlockView.overlaps(ArgumentMatchers.any())).thenAnswer(invocation -> {
+            BoundingBox bound = invocation.getArgument(0);
+            if (bound.equals(agentBounds)) {
+                return overlapsAtAgent;
+            } else {
+                return overlapsOnceExpanded;
+            }
+        });
 
         Mockito.when(mockBlockView.x()).thenReturn(x);
         Mockito.when(mockBlockView.y()).thenReturn(y);
@@ -255,7 +275,7 @@ class ProxyBlockCollisionProviderTest {
         CollisionChunkView chunk = mockChunkAt(x >> 4, z >> 4);
         Mockito.when(chunk.collisionsWith(ArgumentMatchers.any())).thenReturn(initialCollisions);
 
-        BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds.clone(),
+        BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds,
                 Vectors.asDouble(direction), false);
         Assertions.assertSame(collides, result.collides(), "expected collision to be " + collides + " for " +
                 "direction " + direction + " with expected translation " + expectedTranslation);
@@ -304,12 +324,14 @@ class ProxyBlockCollisionProviderTest {
         testWalkDirection(agentBounds, collisions, Direction.NORTHWEST, collides, null);
     }
 
-    private BlockCollisionView[] createCardinallyAdjacentTestBlocks(List<BoundingBox> blockBounds, Bounds blockBoundingBox) {
+    private BlockCollisionView[] createCardinallyAdjacentTestBlocks(List<BoundingBox> blockBounds,
+                                                                    Bounds blockBoundingBox, BoundingBox agentBounds,
+                                                                    boolean overlapsOnceExpanded) {
         BlockCollisionView[] blocks = new BlockCollisionView[4];
-        blocks[0] = mockBlockAt(0, 0, -1, blockBounds, blockBoundingBox, false);
-        blocks[1] = mockBlockAt(1, 0, 0, blockBounds, blockBoundingBox, false);
-        blocks[2] = mockBlockAt(0, 0, 1, blockBounds, blockBoundingBox, false);
-        blocks[3] = mockBlockAt(-1, 0, 0, blockBounds, blockBoundingBox, false);
+        blocks[0] = mockBlockAt(0, 0, -1, blockBounds, blockBoundingBox, agentBounds, false, overlapsOnceExpanded);
+        blocks[1] = mockBlockAt(1, 0, 0, blockBounds, blockBoundingBox, agentBounds, false, overlapsOnceExpanded);
+        blocks[2] = mockBlockAt(0, 0, 1, blockBounds, blockBoundingBox, agentBounds, false, overlapsOnceExpanded);
+        blocks[3] = mockBlockAt(-1, 0, 0, blockBounds, blockBoundingBox, agentBounds, false, overlapsOnceExpanded);
         return blocks;
     }
 }

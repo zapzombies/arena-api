@@ -100,11 +100,10 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     @Override
     public @NotNull HitResult collisionMovingAlong(@NotNull BoundingBox agentBounds, @NotNull Vector3D translation,
                                                    boolean fastExit) {
-        BoundingBox expandedBounds = agentBounds.clone().expandDirectional(
-                translation.x(), translation.y(), translation.z());
+        BoundingBox expanded = agentBounds.clone().expandDirectional(translation.x(), translation.y(), translation.z());
 
-        Iterator<BlockCollisionView> iterator = new BoundedBlockIterator(this, expandedBounds);
-        return collisionCheck(agentBounds, expandedBounds, translation.x(), translation.y(), translation.z(), iterator,
+        Iterator<BlockCollisionView> iterator = new BoundedBlockIterator(this, expanded);
+        return collisionCheck(agentBounds, expanded, translation.x(), translation.y(), translation.z(), iterator,
                 fastExit);
     }
 
@@ -149,13 +148,13 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
                 }
                 else if(view.overlaps(expanded)) {
                     for(Bounds shapeBounds : view.collision()) {
-                        double minX = ((shapeBounds.minX() + view.x()) - originX) + Vectors.EPSILON;
-                        double minY = ((shapeBounds.minY() + view.y()) - originY) + Vectors.EPSILON;
-                        double minZ = ((shapeBounds.minZ() + view.z()) - originZ) + Vectors.EPSILON;
+                        double minX = ((shapeBounds.minX() + view.x()) - originX);
+                        double minY = ((shapeBounds.minY() + view.y()) - originY);
+                        double minZ = ((shapeBounds.minZ() + view.z()) - originZ);
 
-                        double maxX = ((shapeBounds.maxX() + view.x()) - originX) - Vectors.EPSILON;
-                        double maxY = ((shapeBounds.maxY() + view.y()) - originY) - Vectors.EPSILON;
-                        double maxZ = ((shapeBounds.maxZ() + view.z()) - originZ) - Vectors.EPSILON;
+                        double maxX = ((shapeBounds.maxX() + view.x()) - originX);
+                        double maxY = ((shapeBounds.maxY() + view.y()) - originY);
+                        double maxZ = ((shapeBounds.maxZ() + view.z()) - originZ);
 
                         if(checkPair(adjustedXZ, tX, tZ, minX, minZ, maxX, maxZ) &&
                                 checkPair(adjustedXY, tX, tY, minX, minY, maxX, maxY) &&
