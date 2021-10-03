@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 
 public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     private PathEntityWrapper_v1_16_R3 currentPath;
+    private boolean isStopped = false;
+    private double lastSpeed;
 
     public MobNavigator_v1_16_R3(EntityInsentient entityinsentient, World world) {
         super(entityinsentient, world);
@@ -20,24 +22,27 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     @Override
     public void navigateAlongPath(@NotNull PathEntityWrapper pathEntityWrapper, double speed) {
         PathEntity newPath = (currentPath = ((PathEntityWrapper_v1_16_R3)pathEntityWrapper)).pathEntity();
+        lastSpeed = speed;
 
-        Vec3D currentPos = getEntity().getPositionVector();
+        if(!isStopped) {
+            Vec3D currentPos = getEntity().getPositionVector();
 
-        int entityX = NumberConversions.floor(currentPos.x);
-        int entityY = NumberConversions.floor(currentPos.y);
-        int entityZ = NumberConversions.floor(currentPos.z);
+            int entityX = NumberConversions.floor(currentPos.x);
+            int entityY = NumberConversions.floor(currentPos.y);
+            int entityZ = NumberConversions.floor(currentPos.z);
 
-        for(int i = 0; i < newPath.e(); i++) {
-            PathPoint sample = newPath.a(i);
+            for(int i = 0; i < newPath.e(); i++) {
+                PathPoint sample = newPath.a(i);
 
-            if(sample.getX() == entityX && sample.getY() == entityY && sample.getZ() == entityZ) {
-                newPath.c(i);
-                a(newPath, speed);
-                return;
+                if(sample.getX() == entityX && sample.getY() == entityY && sample.getZ() == entityZ) {
+                    newPath.c(i);
+                    a(newPath, speed);
+                    return;
+                }
             }
-        }
 
-        a((PathEntity)null, speed);
+            a((PathEntity)null, speed);
+        }
     }
 
     @Override
@@ -46,13 +51,23 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     }
 
     @Override
-    public boolean shouldRecalculate() {
-        return i();
+    public boolean isIdle() {
+        return m();
     }
 
     @Override
-    public boolean isIdle() {
-        return m();
+    public void pauseNavigating() {
+        isStopped = true;
+        stopPathfinding();
+    }
+
+    @Override
+    public void resumeNavigating() {
+        isStopped = false;
+
+        if(currentPath != null) {
+            a(currentPath.pathEntity(), lastSpeed);
+        }
     }
 
     @Override
@@ -188,9 +203,6 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     public PathEntity k() {
         return c;
     }
-
-    @Override
-    public void stopPathfinding() { }
 
     @Override
     public void o() { }
