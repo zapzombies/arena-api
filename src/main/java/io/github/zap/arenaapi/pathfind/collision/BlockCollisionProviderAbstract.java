@@ -104,7 +104,8 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
                 translation.x(), translation.y(), translation.z());
 
         Iterator<BlockCollisionView> iterator = new BoundedBlockIterator(this, expandedBounds);
-        return collisionCheck(agentBounds, translation.x(), translation.y(), translation.z(), iterator, fastExit);
+        return collisionCheck(agentBounds, expandedBounds, translation.x(), translation.y(), translation.z(), iterator,
+                fastExit);
     }
 
     protected long chunkKey(int x, int z) {
@@ -117,7 +118,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     BlockCollisionView objects that appear in the candidates list. views intersecting the original position of the
     entity will be discarded.
      */
-    private HitResult collisionCheck(BoundingBox agentBounds, double tX, double tY, double tZ,
+    private HitResult collisionCheck(BoundingBox agentBounds, BoundingBox expanded, double tX, double tY, double tZ,
                                      Iterator<BlockCollisionView> candidates, boolean fastExit) {
         double width = agentBounds.getWidthX();
         double height = agentBounds.getHeight();
@@ -126,9 +127,9 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         double originY = agentBounds.getCenterY();
         double originZ = agentBounds.getCenterZ();
 
-        double adjustedWidthXZ = (width * (Math.abs(tX) + Math.abs(tZ))) / 2;
-        double adjustedWidthXY = (height * (Math.abs(tX) + Math.abs(tY))) / 2;
-        double adjustedWidthYZ = (height * (Math.abs(tY) + Math.abs(tZ))) / 2;
+        double adjustedXZ = (width * (Math.abs(tX) + Math.abs(tZ))) / 2;
+        double adjustedXY = (height * (Math.abs(tX) + Math.abs(tY))) / 2;
+        double adjustedZY = (height * (Math.abs(tZ) + Math.abs(tY))) / 2;
 
         double halfWidth = width / 2;
         double halfHeight = height / 2;
@@ -141,36 +142,36 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
 
         while(candidates.hasNext()) {
             BlockCollisionView view = candidates.next();
-            if(view == null || view.collision().isEmpty()) {
-                continue;
-            }
-            else if(view.overlaps(agentBounds)) {
-                collidesAtAgent = true;
-                continue;
-            }
 
-            for(Bounds shapeBounds : view.collision()) {
-                double minX = (shapeBounds.minX() + view.x()) - originX;
-                double minY = (shapeBounds.minY() + view.y()) - originY;
-                double minZ = (shapeBounds.minZ() + view.z()) - originZ;
+            if(view != null && !view.collision().isEmpty()) {
+                if(view.overlaps(agentBounds)) {
+                    collidesAtAgent = true;
+                }
+                else if(view.overlaps(expanded)) {
+                    for(Bounds shapeBounds : view.collision()) {
+                        double minX = ((shapeBounds.minX() + view.x()) - originX) + Vectors.EPSILON;
+                        double minY = ((shapeBounds.minY() + view.y()) - originY) + Vectors.EPSILON;
+                        double minZ = ((shapeBounds.minZ() + view.z()) - originZ) + Vectors.EPSILON;
 
-                double maxX = (shapeBounds.maxX() + view.x()) - originX;
-                double maxY = (shapeBounds.maxY() + view.y()) - originY;
-                double maxZ = (shapeBounds.maxZ() + view.z()) - originZ;
+                        double maxX = ((shapeBounds.maxX() + view.x()) - originX) - Vectors.EPSILON;
+                        double maxY = ((shapeBounds.maxY() + view.y()) - originY) - Vectors.EPSILON;
+                        double maxZ = ((shapeBounds.maxZ() + view.z()) - originZ) - Vectors.EPSILON;
 
-                if(checkPair(adjustedWidthXZ, tX, tZ, minX, minZ, maxX, maxZ) &&
-                        checkPair(adjustedWidthXY, tX, tY, minX, minY, maxX, maxY) &&
-                        checkPair(adjustedWidthYZ, tZ, tY, minZ, minY, maxZ, maxY)) {
-                    if(fastExit) { //fast exit: don't need to compute translation vector
-                        return new HitResult(true, collidesAtAgent, null, null);
-                    }
-                    else { //not fast exit, need to run additional checks
-                        double thisDistance;
-                        if((thisDistance = processCollision(halfWidth, halfHeight, tX, tY, tZ,
-                                minX, minY, minZ, maxX, maxY, maxZ, offset, nearestLengthSquared))!= -1) {
-                            nearestLengthSquared = thisDistance;
-                            nearestBlock = view;
-                            foundCollision = true;
+                        if(checkPair(adjustedXZ, tX, tZ, minX, minZ, maxX, maxZ) &&
+                                checkPair(adjustedXY, tX, tY, minX, minY, maxX, maxY) &&
+                                checkPair(adjustedZY, tZ, tY, minZ, minY, maxZ, maxY)) {
+                            if(fastExit) { //don't compute translation vector if we're fast-exit
+                                return new HitResult(true, collidesAtAgent, null, null);
+                            }
+                            else { //not fast exit, need to run additional checks
+                                double thisDistance;
+                                if((thisDistance = processCollision(halfWidth, halfHeight, tX, tY, tZ,
+                                        minX, minY, minZ, maxX, maxY, maxZ, offset, nearestLengthSquared))!= -1) {
+                                    nearestLengthSquared = thisDistance;
+                                    nearestBlock = view;
+                                    foundCollision = true;
+                                }
+                            }
                         }
                     }
                 }
@@ -191,7 +192,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
             return true;
         }
 
-        if(dirA * dirB < 0) {
+        if(dirA * dirB <= 0) {
             return checkPlane(adjustedSize, dirA, dirB, minA, minB, maxA, maxB);
         }
         else {
