@@ -59,7 +59,7 @@ class ProxyBlockCollisionProviderTest {
     @Test
     void collidesMovingAlongNoModification() {
         assertNoModification(fullAgentBounds, (bounds) -> provider.collisionMovingAlong(bounds,
-                Vectors.asDouble(Direction.NORTH)));
+                Vectors.asDouble(Direction.NORTH), false));
     }
 
     @Test
@@ -259,7 +259,7 @@ class ProxyBlockCollisionProviderTest {
         Mockito.when(chunk.collisionsWith(ArgumentMatchers.any())).thenReturn(initialCollisions);
 
         BlockCollisionProvider.HitResult result = provider.collisionMovingAlong(agentBounds.clone(),
-                Vectors.asDouble(direction));
+                Vectors.asDouble(direction), false);
         Assertions.assertSame(collides, result.collides(), "expected collision to be " + collides + " for " +
                 "direction " + direction + " with expected translation " + expectedTranslation);
 

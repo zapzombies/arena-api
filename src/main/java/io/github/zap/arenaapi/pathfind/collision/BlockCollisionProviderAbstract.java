@@ -4,6 +4,7 @@ import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
 import io.github.zap.arenaapi.nms.common.world.CollisionChunkView;
 import io.github.zap.arenaapi.pathfind.chunk.ChunkBounds;
 import io.github.zap.arenaapi.pathfind.util.ChunkBoundsIterator;
+import io.github.zap.arenaapi.pathfind.util.CollisionViewIterator;
 import io.github.zap.commons.vectors.*;
 import io.github.zap.commons.vectors.Vector2I;
 import io.github.zap.commons.vectors.Vector3D;
@@ -16,12 +17,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider {
-    private static final Vector ZERO = new Vector();
-
     protected final World world;
     protected final Map<Long, CollisionChunkView> chunkViewMap;
 
@@ -98,12 +98,15 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     }
 
     @Override
-    public @NotNull HitResult collisionMovingAlong(@NotNull BoundingBox agentBounds, @NotNull Vector3D translation) {
+    public @NotNull HitResult collisionMovingAlong(@NotNull BoundingBox agentBounds, @NotNull Vector3D translation,
+                                                   boolean fastExit) {
         BoundingBox expandedBounds = agentBounds.clone().expandDirectional(
                 translation.x(), translation.y(), translation.z()).expand(-Vectors.EPSILON);
 
-        List<BlockCollisionView> samples = solidsOverlapping(expandedBounds);
-        return collisionCheck(agentBounds, translation.x(), translation.y(), translation.z(), samples);
+        CollisionViewIterator iterator = new CollisionViewIterator(this, expandedBounds,
+                (blockCollisionView -> !blockCollisionView.collision().isEmpty()));
+
+        return collisionCheck(agentBounds, translation.x(), translation.y(), translation.z(), iterator, fastExit);
     }
 
     protected long chunkKey(int x, int z) {
@@ -117,11 +120,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     entity will be discarded.
      */
     private HitResult collisionCheck(BoundingBox agentBounds, double tX, double tY, double tZ,
-                                     List<BlockCollisionView> candidates) {
-        if(candidates.isEmpty()) {
-            return HitResult.NO_HIT;
-        }
-
+                                     Iterator<BlockCollisionView> candidates, boolean fastExit) {
         double width = agentBounds.getWidthX();
         double height = agentBounds.getHeight();
 
@@ -142,7 +141,9 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         BlockCollisionView nearestBlock = null;
         Vector offset = new Vector();
 
-        for(BlockCollisionView view : candidates) {
+        while(candidates.hasNext()) {
+            BlockCollisionView view = candidates.next();
+
             if(view.isOverlapping(agentBounds)) {
                 collidesAtAgent = true;
                 continue;
@@ -160,12 +161,17 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
                 if(checkPair(adjustedWidthXZ, tX, tZ, minX, minZ, maxX, maxZ) &&
                         checkPair(adjustedWidthXY, tX, tY, minX, minY, maxX, maxY) &&
                         checkPair(adjustedWidthYZ, tZ, tY, minZ, minY, maxZ, maxY)) {
-                    double thisDistance;
-                    if((thisDistance = processCollision(halfWidth, halfHeight, tX, tY, tZ,
-                            minX, minY, minZ, maxX, maxY, maxZ, offset, nearestLengthSquared))!= -1) {
-                        nearestLengthSquared = thisDistance;
-                        nearestBlock = view;
-                        foundCollision = true;
+                    if(fastExit) { //fast exit: don't need to compute translation vector
+                        return new HitResult(true, collidesAtAgent, null, null);
+                    }
+                    else { //not fast exit, need to run additional checks
+                        double thisDistance;
+                        if((thisDistance = processCollision(halfWidth, halfHeight, tX, tY, tZ,
+                                minX, minY, minZ, maxX, maxY, maxZ, offset, nearestLengthSquared))!= -1) {
+                            nearestLengthSquared = thisDistance;
+                            nearestBlock = view;
+                            foundCollision = true;
+                        }
                     }
                 }
             }

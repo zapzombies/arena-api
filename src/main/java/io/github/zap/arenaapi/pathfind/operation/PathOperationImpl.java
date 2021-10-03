@@ -79,6 +79,11 @@ class PathOperationImpl implements PathOperation {
                         NumberConversions.floor(agent.z()));
                 currentNode.score.set(0, heuristicCalculator.compute(context, currentNode, destination));
                 bestFound = currentNode;
+
+                if(condition.hasCompleted(context, currentNode, destination)) {
+                    complete(true);
+                    return true;
+                }
             }
 
             visited.putElement(currentNode, currentNode);

@@ -9,10 +9,24 @@ import io.github.zap.arenaapi.pathfind.context.PathfinderContext;
 import io.github.zap.commons.vectors.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.image.DirectColorModel;
+
 @SuppressWarnings("ClassCanBeRecord") //unintelliJ
 class WalkNodeExplorer implements NodeExplorer {
     private final NodeStepper stepper;
     private final ChunkBounds chunkBounds;
+
+    private static final Direction[] DIRECTIONS = new Direction[] {
+            Direction.NORTH,
+            Direction.NORTHEAST,
+            Direction.EAST,
+            Direction.SOUTHEAST,
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST,
+            Direction.UP
+    };
 
     WalkNodeExplorer(@NotNull NodeStepper stepper, @NotNull ChunkBounds chunkBounds) {
         this.stepper = stepper;
@@ -45,8 +59,8 @@ class WalkNodeExplorer implements NodeExplorer {
         }
 
         int j = 0;
-        for(int i = 0; i < buffer.length; i++) { //try to go all 8 cardinal/intercardinal directions as well as up
-            Direction direction = Direction.valueAtIndex(i);
+        for(int i = 0; i < Math.min(buffer.length, DIRECTIONS.length); i++) {
+            Direction direction = DIRECTIONS[i];
             if(direction == Direction.UP && currentBlock.collision().isEmpty()) {
                 continue;
             }

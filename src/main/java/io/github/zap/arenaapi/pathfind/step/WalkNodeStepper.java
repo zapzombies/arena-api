@@ -36,7 +36,8 @@ class WalkNodeStepper implements NodeStepper {
         Vector3D translate = computeTranslation(position, direction);
 
         BoundingBox agentBounds = getAgentBounds(agent, position);
-        BlockCollisionProvider.HitResult jumpTestResult = collisionProvider.collisionMovingAlong(agentBounds, translate);
+        BlockCollisionProvider.HitResult jumpTestResult = collisionProvider.collisionMovingAlong(agentBounds, translate,
+                false);
 
         if(direction == Direction.UP && !jumpTestResult.blockAtAgent()) {
             return null;
@@ -55,9 +56,9 @@ class WalkNodeStepper implements NodeStepper {
                 BoundingBox adjusted = agentBounds.clone().shift(shift.x(), shift.y(), shift.z());
                 double dY = seek.y() - agentBounds.getMinY();
 
-                if(!collisionProvider.collisionMovingAlong(adjusted, Vectors.of(0, dY, 0)).collides()
+                if(!collisionProvider.collisionMovingAlong(adjusted, Vectors.of(0, dY, 0), true).collides()
                         && !collisionProvider.collisionMovingAlong(adjusted.shift(0, dY, 0),
-                        Vectors.subtract(translate, shift)).collides()) {
+                        Vectors.subtract(translate, shift), true).collides()) {
                     return Vectors.asIntFloor(seek);
                 }
             }
