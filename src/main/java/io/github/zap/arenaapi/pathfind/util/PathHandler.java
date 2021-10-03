@@ -43,9 +43,13 @@ public class PathHandler {
                     PathResult value = result.get();
                     result = null;
                     return value;
-                } catch (InterruptedException | ExecutionException exception) {
-                    engine.getPlugin().getLogger().log(Level.WARNING, "exception thrown when retrieving a " +
-                            "completed PathResult", exception);
+                } catch (InterruptedException exception) {
+                    engine.getPlugin().getLogger().log(Level.WARNING, "Interrupted when retrieving PathResult",
+                            exception);
+                }
+                catch (ExecutionException exception) {
+                    engine.getPlugin().getLogger().log(Level.WARNING, "Exception thrown when retrieving a " +
+                            "completed PathResult", exception.getCause());
                 }
             }
         }

@@ -24,7 +24,7 @@ public class CollisionChunkProxy_v1_16_R3 extends CollisionChunkAbstract_v1_16_R
     }
 
     @Override
-    public BlockCollisionView collisionView(int chunkX, int chunkY, int chunkZ) {
+    public BlockCollisionView getBlock(int chunkX, int chunkY, int chunkZ) {
         Chunk currentChunk = this.chunk.get();
 
         if(currentChunk != null) {

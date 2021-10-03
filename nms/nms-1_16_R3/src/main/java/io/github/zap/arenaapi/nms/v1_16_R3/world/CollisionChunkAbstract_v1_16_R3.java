@@ -1,11 +1,12 @@
 package io.github.zap.arenaapi.nms.v1_16_R3.world;
 
+import io.github.zap.arenaapi.nms.common.util.BoundedBlockIterator;
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
+import io.github.zap.arenaapi.nms.common.world.BlockSource;
 import io.github.zap.arenaapi.nms.common.world.CollisionChunkView;
 import io.github.zap.commons.vectors.Vector2I;
 import io.github.zap.commons.vectors.Vectors;
 import org.bukkit.util.BoundingBox;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -13,70 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 
 abstract class CollisionChunkAbstract_v1_16_R3 implements CollisionChunkView {
-    private class SnapshotIterator implements Iterator<BlockCollisionView> {
-        private final int startX;
-        private final int startY;
-
-        private final int endX;
-        private final int endY;
-        private final int endZ;
-
-        private int x;
-        private int y;
-        private int z;
-
-        SnapshotIterator(@NotNull BoundingBox overlap) {
-            Vector min = overlap.getMin();
-            Vector max = overlap.getMax();
-
-            startX = min.getBlockX();
-            startY = min.getBlockY();
-
-            x = startX - 1;
-            y = startY;
-            z = min.getBlockZ();
-
-            endX = max.getBlockX() + 1;
-            endY = max.getBlockY() + 1;
-            endZ = max.getBlockZ() + 1;
-        }
-
-        @Override
-        public boolean hasNext() {
-            int nextX = x + 1;
-            int nextY = y;
-            int nextZ = z;
-
-            if(nextX == endX) {
-                nextY++;
-            }
-
-            if(nextY == endY) {
-                nextZ++;
-            }
-
-            return nextZ < endZ;
-        }
-
-        @Override
-        public BlockCollisionView next() {
-            if(++x == endX) {
-                if(++y == endY) {
-                    z++;
-                    y = startY;
-                }
-
-                x = startX;
-            }
-
-            int chunkX = x & 15;
-            int chunkY = y;
-            int chunkZ = z & 15;
-
-            return collisionView(chunkX, chunkY, chunkZ);
-        }
-    }
-
     protected final int x;
     protected final int z;
 
@@ -84,6 +21,8 @@ abstract class CollisionChunkAbstract_v1_16_R3 implements CollisionChunkView {
     protected final int originZ;
 
     private final BoundingBox chunkBounds;
+    private final BlockSource source = (x, y, z) ->
+            CollisionChunkAbstract_v1_16_R3.this.getBlock(x & 15, y, z & 15);
 
     CollisionChunkAbstract_v1_16_R3(int locX, int locZ) {
         this.x = locX;
@@ -104,12 +43,12 @@ abstract class CollisionChunkAbstract_v1_16_R3 implements CollisionChunkView {
     public boolean collidesWithAny(@NotNull BoundingBox worldBounds) {
         if(chunkBounds.overlaps(worldBounds)) {
             BoundingBox overlap = worldBounds.clone().intersection(chunkBounds);
-            SnapshotIterator iterator = new SnapshotIterator(overlap);
+            Iterator<BlockCollisionView> iterator = new BoundedBlockIterator(source, overlap);
 
             while(iterator.hasNext()) {
                 BlockCollisionView snapshot = iterator.next();
 
-                if(snapshot != null && snapshot.isOverlapping(overlap)) {
+                if(snapshot != null && snapshot.overlaps(overlap)) {
                     return true;
                 }
             }
@@ -124,13 +63,13 @@ abstract class CollisionChunkAbstract_v1_16_R3 implements CollisionChunkView {
 
         if(worldBounds.overlaps(chunkBounds)) {
             BoundingBox overlap = worldBounds.clone().intersection(chunkBounds);
-            SnapshotIterator iterator = new SnapshotIterator(overlap);
+            Iterator<BlockCollisionView> iterator = new BoundedBlockIterator(source, overlap);
 
             while(iterator.hasNext()) {
-                BlockCollisionView snapshot = iterator.next();
+                BlockCollisionView view = iterator.next();
 
-                if(snapshot != null && snapshot.isOverlapping(overlap)) {
-                    shapes.add(snapshot);
+                if(view != null && view.overlaps(overlap)) {
+                    shapes.add(view);
                 }
             }
         }

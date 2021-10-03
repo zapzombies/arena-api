@@ -4,7 +4,6 @@ import io.github.zap.arenaapi.nms.common.world.*;
 import io.github.zap.commons.vectors.*;
 import org.bukkit.Chunk;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.NumberConversions;
 import org.junit.jupiter.api.Assertions;
@@ -12,8 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -188,7 +185,7 @@ class ProxyBlockCollisionProviderTest {
     void fullAgentMovingDownCollisionWithFullBlock() {
         mockBlockAt(0, 0, 0, fullBlock, fullBlockBounds, false);
         testWalkDirection(fullAgentBounds.clone().shift(0, 1, 0), new ArrayList<>(), Direction.DOWN,
-                false, null);
+                true, null);
     }
 
     @Test
@@ -240,13 +237,13 @@ class ProxyBlockCollisionProviderTest {
 
         BlockCollisionView mockBlockView = Mockito.mock(BlockCollisionView.class);
         Mockito.when(mockBlockView.collision()).thenReturn(mockVoxelShapeWrapper);
-        Mockito.when(mockBlockView.isOverlapping(ArgumentMatchers.any())).thenReturn(overlapsAtAgent);
+        Mockito.when(mockBlockView.overlaps(ArgumentMatchers.any())).thenReturn(overlapsAtAgent);
 
         Mockito.when(mockBlockView.x()).thenReturn(x);
         Mockito.when(mockBlockView.y()).thenReturn(y);
         Mockito.when(mockBlockView.z()).thenReturn(z);
 
-        Mockito.when(mockChunkView.collisionView(x & 15, y, z & 15)).thenReturn(mockBlockView);
+        Mockito.when(mockChunkView.getBlock(x & 15, y, z & 15)).thenReturn(mockBlockView);
         return mockBlockView;
     }
 

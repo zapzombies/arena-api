@@ -83,7 +83,7 @@ class VoxelShapeWrapper_v1_16_R3 implements VoxelShapeWrapper {
     }
 
     @Override
-    public boolean collidesWith(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+    public boolean overlaps(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
         for(Bounds bound : shapes) {
             if(bound.overlaps(minX, minY, minZ, maxX, maxY, maxZ)) {
                 return true;

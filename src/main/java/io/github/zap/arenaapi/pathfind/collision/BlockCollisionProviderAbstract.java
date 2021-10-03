@@ -4,13 +4,13 @@ import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
 import io.github.zap.arenaapi.nms.common.world.CollisionChunkView;
 import io.github.zap.arenaapi.pathfind.chunk.ChunkBounds;
 import io.github.zap.arenaapi.pathfind.util.ChunkBoundsIterator;
-import io.github.zap.arenaapi.pathfind.util.CollisionViewIterator;
+import io.github.zap.arenaapi.nms.common.util.BoundedBlockIterator;
 import io.github.zap.commons.vectors.*;
 import io.github.zap.commons.vectors.Vector2I;
 import io.github.zap.commons.vectors.Vector3D;
 import io.github.zap.commons.vectors.Vectors;
-import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.util.BlockIterator;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
@@ -58,7 +58,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         CollisionChunkView view = chunkAt(x >> 4, z >> 4);
 
         if(view != null) {
-            return view.collisionView(x & 15, y, z & 15);
+            return view.getBlock(x & 15, y, z & 15);
         }
 
         return null;
@@ -101,11 +101,9 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     public @NotNull HitResult collisionMovingAlong(@NotNull BoundingBox agentBounds, @NotNull Vector3D translation,
                                                    boolean fastExit) {
         BoundingBox expandedBounds = agentBounds.clone().expandDirectional(
-                translation.x(), translation.y(), translation.z()).expand(-Vectors.EPSILON);
+                translation.x(), translation.y(), translation.z());
 
-        CollisionViewIterator iterator = new CollisionViewIterator(this, expandedBounds,
-                (blockCollisionView -> !blockCollisionView.collision().isEmpty()));
-
+        Iterator<BlockCollisionView> iterator = new BoundedBlockIterator(this, expandedBounds);
         return collisionCheck(agentBounds, translation.x(), translation.y(), translation.z(), iterator, fastExit);
     }
 
@@ -143,8 +141,10 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
 
         while(candidates.hasNext()) {
             BlockCollisionView view = candidates.next();
-
-            if(view.isOverlapping(agentBounds)) {
+            if(view == null || view.collision().isEmpty()) {
+                continue;
+            }
+            else if(view.overlaps(agentBounds)) {
                 collidesAtAgent = true;
                 continue;
             }

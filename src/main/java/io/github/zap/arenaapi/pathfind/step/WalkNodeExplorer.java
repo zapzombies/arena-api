@@ -16,18 +16,6 @@ class WalkNodeExplorer implements NodeExplorer {
     private final NodeStepper stepper;
     private final ChunkBounds chunkBounds;
 
-    private static final Direction[] DIRECTIONS = new Direction[] {
-            Direction.NORTH,
-            Direction.NORTHEAST,
-            Direction.EAST,
-            Direction.SOUTHEAST,
-            Direction.SOUTH,
-            Direction.SOUTHWEST,
-            Direction.WEST,
-            Direction.NORTHWEST,
-            Direction.UP
-    };
-
     WalkNodeExplorer(@NotNull NodeStepper stepper, @NotNull ChunkBounds chunkBounds) {
         this.stepper = stepper;
         this.chunkBounds = chunkBounds;
@@ -59,8 +47,8 @@ class WalkNodeExplorer implements NodeExplorer {
         }
 
         int j = 0;
-        for(int i = 0; i < Math.min(buffer.length, DIRECTIONS.length); i++) {
-            Direction direction = DIRECTIONS[i];
+        for(int i = 0; i < buffer.length; i++) {
+            Direction direction = Direction.valueAtIndex(i);
             if(direction == Direction.UP && currentBlock.collision().isEmpty()) {
                 continue;
             }

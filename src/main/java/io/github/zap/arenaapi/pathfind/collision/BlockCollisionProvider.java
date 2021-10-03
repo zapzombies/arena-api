@@ -1,6 +1,7 @@
 package io.github.zap.arenaapi.pathfind.collision;
 
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
+import io.github.zap.arenaapi.nms.common.world.BlockSource;
 import io.github.zap.arenaapi.nms.common.world.CollisionChunkView;
 import io.github.zap.arenaapi.pathfind.chunk.ChunkBounds;
 import io.github.zap.commons.vectors.Vector3D;
@@ -9,7 +10,6 @@ import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import io.github.zap.commons.vectors.*;
 
 import java.util.List;
 
@@ -20,10 +20,8 @@ import java.util.List;
  * implementations to support concurrency in any capacity, and may throw exceptions when multiple threads attempt to
  * call a method concurrently.
  */
-public interface BlockCollisionProvider {
-    record HitResult(boolean collides, boolean blockAtAgent, BlockCollisionView nearest, Vector3D translationVector) {
-        public static HitResult NO_HIT = new HitResult(false, false, null, null);
-    }
+public interface BlockCollisionProvider extends BlockSource {
+    record HitResult(boolean collides, boolean blockAtAgent, BlockCollisionView nearest, Vector3D translationVector) { }
 
     /**
      * Returns the World object this BlockProvider is linked to.
@@ -47,8 +45,6 @@ public interface BlockCollisionProvider {
     boolean hasChunk(int x, int z);
 
     @Nullable CollisionChunkView chunkAt(int x, int z);
-
-    @Nullable BlockCollisionView getBlock(int x, int y, int z);
 
     boolean collidesAt(@NotNull BoundingBox bounds);
 
