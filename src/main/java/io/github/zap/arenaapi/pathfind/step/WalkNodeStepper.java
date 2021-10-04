@@ -36,7 +36,8 @@ class WalkNodeStepper implements NodeStepper {
         Vector3D translate = computeTranslation(position, direction);
 
         BoundingBox agentBounds = getAgentBounds(agent, position);
-        BlockCollisionProvider.HitResult jumpTestResult = collisionProvider.collisionMovingAlong(agentBounds, translate);
+        BlockCollisionProvider.HitResult jumpTestResult = collisionProvider.collisionMovingAlong(agentBounds, translate,
+                false);
 
         if(direction == Direction.UP && !jumpTestResult.blockAtAgent()) {
             return null;
@@ -55,10 +56,18 @@ class WalkNodeStepper implements NodeStepper {
                 BoundingBox adjusted = agentBounds.clone().shift(shift.x(), shift.y(), shift.z());
                 double dY = seek.y() - agentBounds.getMinY();
 
-                if(!collisionProvider.collisionMovingAlong(adjusted, Vectors.of(0, dY, 0)).collides()
-                        && !collisionProvider.collisionMovingAlong(adjusted.shift(0, dY, 0),
-                        Vectors.subtract(translate, shift)).collides()) {
-                    return Vectors.asIntFloor(seek);
+                boolean shiftCollides = collisionProvider.collisionMovingAlong(adjusted, Vectors.of(0, dY, 0),
+                        true).collides();
+                if(!shiftCollides) {
+                    BoundingBox adjustedJumped = adjusted.shift(0, dY,0);
+
+                    boolean shiftCollidesJump = collisionProvider.collisionMovingAlong(adjustedJumped,
+                            Vectors.of(seek.x() - adjustedJumped.getCenterX(), 0, seek.z() -
+                                    adjustedJumped.getCenterZ()), true).collides();
+
+                    if(!shiftCollidesJump) {
+                        return Vectors.asIntFloor(seek);
+                    }
                 }
             }
         }
@@ -126,7 +135,7 @@ class WalkNodeStepper implements NodeStepper {
     }
 
     private BoundingBox getAgentBounds(PathAgent agent, Vector3D newAgentPosition) {
-        if(lastAgentPosition == null || !Vectors.equals(newAgentPosition, lastAgentPosition)) {
+        if(lastAgentPosition == null || !Vectors.fuzzyEquals(newAgentPosition, lastAgentPosition)) {
             double halfWidth = agent.width() / 2;
             double height = agent.height();
             cachedAgentBounds = new BoundingBox(

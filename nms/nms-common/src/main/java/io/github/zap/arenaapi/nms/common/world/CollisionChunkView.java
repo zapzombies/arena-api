@@ -7,9 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public interface CollisionChunkView {
-    @Nullable BlockCollisionView collisionView(int chunkX, int chunkY, int chunkZ);
-
+public interface CollisionChunkView extends BlockSource {
     boolean collidesWithAny(@NotNull BoundingBox worldRelativeBounds);
 
     @NotNull List<BlockCollisionView> collisionsWith(@NotNull BoundingBox worldRelativeBounds);

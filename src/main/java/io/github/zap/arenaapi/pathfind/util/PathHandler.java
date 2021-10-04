@@ -1,16 +1,12 @@
 package io.github.zap.arenaapi.pathfind.util;
 
-import io.github.zap.arenaapi.ArenaApi;
 import io.github.zap.arenaapi.pathfind.path.PathResult;
 import io.github.zap.arenaapi.pathfind.engine.PathfinderEngine;
 import io.github.zap.arenaapi.pathfind.operation.PathOperation;
-import lombok.SneakyThrows;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
-import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -47,9 +43,13 @@ public class PathHandler {
                     PathResult value = result.get();
                     result = null;
                     return value;
-                } catch (InterruptedException | ExecutionException exception) {
-                    engine.getPlugin().getLogger().log(Level.WARNING, "exception thrown when retrieving a " +
-                            "completed PathResult", exception);
+                } catch (InterruptedException exception) {
+                    engine.getPlugin().getLogger().log(Level.WARNING, "Interrupted when retrieving PathResult",
+                            exception);
+                }
+                catch (ExecutionException exception) {
+                    engine.getPlugin().getLogger().log(Level.WARNING, "Exception thrown when retrieving a " +
+                            "completed PathResult", exception.getCause());
                 }
             }
         }

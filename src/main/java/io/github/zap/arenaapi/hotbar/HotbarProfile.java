@@ -77,10 +77,7 @@ public class HotbarProfile {
      */
     public void swapSlotOwnership(int slot, @NotNull HotbarObjectGroup newHotbarObjectGroup) {
         for (HotbarObjectGroup otherHotbarObjectGroup : hotbarObjectGroupMap.values()) {
-            if (newHotbarObjectGroup == otherHotbarObjectGroup) {
-                return;
-            }
-            if (otherHotbarObjectGroup.getHotbarObjectMap().containsKey(slot)) {
+            if (newHotbarObjectGroup != otherHotbarObjectGroup && otherHotbarObjectGroup.getHotbarObjectMap().containsKey(slot)) {
                 otherHotbarObjectGroup.remove(slot, false);
                 newHotbarObjectGroup.addHotbarObject(slot);
                 return;

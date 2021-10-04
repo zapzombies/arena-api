@@ -19,10 +19,10 @@ public interface VoxelShapeWrapper extends Iterable<Bounds> {
 
     boolean anyBoundsMatches(@NotNull BoxPredicate predicate);
 
-    boolean collidesWith(double minX, double minY, double minZ, double maxX, double maxY, double maxZ);
+    boolean overlaps(double minX, double minY, double minZ, double maxX, double maxY, double maxZ);
 
-    default boolean collidesWith(@NotNull BoundingBox boundingBox) {
-        return collidesWith(boundingBox.getMinX(), boundingBox.getMinY(), boundingBox.getMinZ(),
+    default boolean overlaps(@NotNull BoundingBox boundingBox) {
+        return overlaps(boundingBox.getMinX(), boundingBox.getMinY(), boundingBox.getMinZ(),
                 boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ());
     }
 }

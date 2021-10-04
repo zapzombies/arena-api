@@ -6,6 +6,7 @@ import io.github.zap.commons.graph.ChunkGraph;
 import net.minecraft.server.v1_16_R3.*;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
@@ -36,7 +37,7 @@ class CollisionChunkSnapshot_v1_16_R3 extends CollisionChunkAbstract_v1_16_R3 {
     }
 
     @Override
-    public BlockCollisionView collisionView(int chunkX, int chunkY, int chunkZ) {
+    public @Nullable BlockCollisionView getBlock(int chunkX, int chunkY, int chunkZ) {
         assertValidChunkCoordinate(chunkX, chunkY, chunkZ);
         BlockCollisionView snapshot = nonSolidOrPartial.elementAt(chunkX, chunkY, chunkZ);
 

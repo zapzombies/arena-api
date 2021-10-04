@@ -13,11 +13,9 @@ import io.github.zap.arenaapi.pathfind.path.PathNode;
 import io.github.zap.arenaapi.pathfind.path.PathResult;
 import io.github.zap.arenaapi.pathfind.path.PathResults;
 import io.github.zap.arenaapi.pathfind.step.NodeExplorer;
-import io.github.zap.arenaapi.pathfind.util.Utils;
 import io.github.zap.commons.graph.ArrayChunkGraph;
 import io.github.zap.commons.graph.ChunkGraph;
 import io.github.zap.commons.vectors.Vectors;
-import org.bukkit.util.BoundingBox;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -79,6 +77,11 @@ class PathOperationImpl implements PathOperation {
                         NumberConversions.floor(agent.z()));
                 currentNode.score.set(0, heuristicCalculator.compute(context, currentNode, destination));
                 bestFound = currentNode;
+
+                if(condition.hasCompleted(context, currentNode, destination)) {
+                    complete(true);
+                    return true;
+                }
             }
 
             visited.putElement(currentNode, currentNode);

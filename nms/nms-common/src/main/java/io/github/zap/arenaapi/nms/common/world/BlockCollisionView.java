@@ -10,7 +10,7 @@ public interface BlockCollisionView extends Vector3I {
 
     @NotNull VoxelShapeWrapper collision();
 
-    boolean isOverlapping(@NotNull BoundingBox worldBounds);
+    boolean overlaps(@NotNull BoundingBox worldBounds);
 
     double exactY();
 
