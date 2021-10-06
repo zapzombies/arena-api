@@ -165,7 +165,7 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
                             else { //not fast exit, need to run additional checks
                                 double thisDistance;
                                 if((thisDistance = processCollision(halfWidth, halfHeight, tX, tY, tZ,
-                                        minX, minY, minZ, maxX, maxY, maxZ, offset, nearestLengthSquared))!= -1) {
+                                        minX, minY, minZ, maxX, maxY, maxZ, offset, nearestLengthSquared)) != -1) {
                                     nearestLengthSquared = thisDistance;
                                     nearestBlock = view;
                                     foundCollision = true;
