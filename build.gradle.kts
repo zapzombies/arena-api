@@ -2,7 +2,7 @@ import io.github.zap.build.gradle.convention.*
 
 // Uncomment to use local maven version - help local testing faster
 plugins {
-    id("io.github.zap.build.gradle.convention.shadow-mc-plugin") version "1.1.0"
+    id("io.github.zap.build.gradle.convention.shadow-mc-plugin") version "1.1.0-SNAPSHOT-1633613339"
 }
 
 description = "arena-api"
