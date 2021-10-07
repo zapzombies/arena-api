@@ -8,11 +8,12 @@ import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
     private final WorldBridge worldBridge;
-    private final ReentrantReadWriteLock rrwl = new ReentrantReadWriteLock();
+    private final ReadWriteLock rwl = new ReentrantReadWriteLock();
 
     ProxyBlockCollisionProvider(@NotNull WorldBridge worldBridge, @NotNull World world, int concurrency) {
         super(world, new Long2ObjectOpenHashMap<>(), true);
@@ -29,9 +30,9 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
     public @Nullable CollisionChunkView chunkAt(int x, int z) {
         long key = chunkKey(x, z);
 
-        rrwl.readLock().lock();
+        rwl.readLock().lock();
         CollisionChunkView view = chunkViewMap.get(key);
-        rrwl.readLock().unlock();
+        rwl.readLock().unlock();
 
         if(view == null) {
             Chunk chunk = worldBridge.getChunkIfLoadedImmediately(world, x, z);
@@ -39,9 +40,9 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
             if(chunk != null) {
                 view = worldBridge.proxyView(chunk);
 
-                rrwl.writeLock().lock();
+                rwl.writeLock().lock();
                 chunkViewMap.put(key, view);
-                rrwl.writeLock().unlock();
+                rwl.writeLock().unlock();
             }
         }
 

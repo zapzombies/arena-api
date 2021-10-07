@@ -121,8 +121,8 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
      */
     private HitResult collisionCheck(BoundingBox agentBounds, BoundingBox expanded, double tX, double tY, double tZ,
                                      Iterator<BlockCollisionView> candidates, boolean fastExit) {
-        double width = agentBounds.getWidthX();
-        double height = agentBounds.getHeight();
+        double width = agentBounds.getWidthX() - Vectors.EPSILON;
+        double height = agentBounds.getHeight() - Vectors.EPSILON;
 
         double originX = agentBounds.getCenterX();
         double originY = agentBounds.getCenterY();
