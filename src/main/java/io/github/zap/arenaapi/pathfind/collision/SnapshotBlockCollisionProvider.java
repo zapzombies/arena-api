@@ -5,6 +5,8 @@ import io.github.zap.arenaapi.nms.common.world.CollisionChunkView;
 import io.github.zap.arenaapi.nms.common.world.WorldBridge;
 import io.github.zap.arenaapi.pathfind.chunk.ChunkBounds;
 import io.github.zap.commons.vectors.*;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +17,7 @@ class SnapshotBlockCollisionProvider extends BlockCollisionProviderAbstract {
 
 
     SnapshotBlockCollisionProvider(@NotNull WorldBridge worldBridge, @NotNull World world, int concurrency, int maxCaptureAge) {
-        super(world, new MapMaker().weakValues().concurrencyLevel(concurrency).makeMap(), true);
+        super(world, new Long2ObjectOpenHashMap<>(), true);
         this.worldBridge = worldBridge;
         this.maxCaptureAge = maxCaptureAge;
     }

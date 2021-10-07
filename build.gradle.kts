@@ -36,6 +36,7 @@ dependencies {
     relocate("com.fasterxml.jackson.core:jackson-databind:2.12.3")
     relocate("com.fasterxml.jackson.core:jackson-annotations:2.12.3")
     relocate("org.apache.commons:commons-lang3:3.12.0")
+    relocate("it.unimi.dsi:fastutil:8.5.6")
 
     bukkitPlugin("io.github.zap:zap-party:1.0.0-SNAPSHOT-1630956414", qs())
     bukkitPlugin("com.comphenix.protocol:ProtocolLib:4.7.0")

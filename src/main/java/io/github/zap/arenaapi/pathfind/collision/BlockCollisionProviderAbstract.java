@@ -9,6 +9,8 @@ import io.github.zap.commons.vectors.*;
 import io.github.zap.commons.vectors.Vector2I;
 import io.github.zap.commons.vectors.Vector3D;
 import io.github.zap.commons.vectors.Vectors;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.bukkit.World;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.BoundingBox;
@@ -23,11 +25,11 @@ import java.util.Map;
 
 abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider {
     protected final World world;
-    protected final Map<Long, CollisionChunkView> chunkViewMap;
+    protected final Long2ObjectMap<CollisionChunkView> chunkViewMap;
 
     private final boolean supportsAsync;
 
-    BlockCollisionProviderAbstract(@NotNull World world, @NotNull Map<Long, CollisionChunkView> chunkViewMap,
+    BlockCollisionProviderAbstract(@NotNull World world, @NotNull Long2ObjectMap<CollisionChunkView> chunkViewMap,
                                    boolean supportsAsync) {
         this.world = world;
         this.chunkViewMap = chunkViewMap;
