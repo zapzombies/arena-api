@@ -19,6 +19,7 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
     private final WorldBridge worldBridge;
     private final ReadWriteLock rwl = new ReentrantReadWriteLock();
     private final Event<ChunkUnloadEvent> chunkUnloadEvent;
+    private volatile boolean closed = false;
 
     ProxyBlockCollisionProvider(@NotNull Plugin plugin, @NotNull WorldBridge worldBridge, @NotNull World world) {
         super(world, new Long2ObjectOpenHashMap<>(), true);
@@ -28,6 +29,8 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
     }
 
     private void onChunkUnload(Object sender, ChunkUnloadEvent args) {
+        System.out.println("Caught chunk unload " + args.getChunk());
+
         Chunk chunk = args.getChunk();
         long chunkKey = chunkKey(chunk.getX(), chunk.getZ());
 
@@ -42,6 +45,7 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
 
         rwl.writeLock().lock();
         chunkViewMap.clear();
+        closed = true;
         rwl.writeLock().unlock();
     }
 
@@ -66,7 +70,9 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
                 view = worldBridge.proxyView(chunk);
 
                 rwl.writeLock().lock();
-                chunkViewMap.put(key, view);
+                if(!closed) {
+                    chunkViewMap.put(key, view);
+                }
                 rwl.writeLock().unlock();
             }
         }

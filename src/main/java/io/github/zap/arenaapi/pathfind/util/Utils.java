@@ -20,7 +20,7 @@ public class Utils {
     }
 
     public static @NotNull BlockCollisionView highestBlockBelow(@NotNull World world, @NotNull WorldBridge bridge,
-                                                       @NotNull BoundingBox boundingBox) {
+                                                                @NotNull BoundingBox boundingBox) {
         BoundingBox shrunkenBounds = boundingBox.clone().resize(
                 boundingBox.getMinX(), boundingBox.getMinY(), boundingBox.getMinZ(),
                 boundingBox.getMaxX(), boundingBox.getMinY() + 1, boundingBox.getMaxZ());
