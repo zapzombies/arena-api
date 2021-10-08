@@ -102,7 +102,7 @@ abstract class AsyncPathfinderEngineAbstract<T extends PathfinderContext> implem
         PathfinderContext context = contexts.remove(event.getWorld().getUID());
 
         if(context != null) {
-            context.blockProvider().clearForWorld();
+            context.blockProvider().unload();
             plugin.getLogger().info("Pathfinding context for world " + event.getWorld().getName() + " unloaded");
         }
     }

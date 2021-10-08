@@ -4,6 +4,7 @@ import io.github.zap.arenaapi.nms.common.world.*;
 import io.github.zap.commons.vectors.*;
 import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.NumberConversions;
 import org.junit.jupiter.api.Assertions;
@@ -44,7 +45,7 @@ class ProxyBlockCollisionProviderTest {
     void setUp() {
         worldBridge = Mockito.mock(WorldBridge.class);
         world = Mockito.mock(World.class);
-        provider = new ProxyBlockCollisionProvider(worldBridge, world, 1);
+        provider = new ProxyBlockCollisionProvider(Mockito.mock(Plugin.class), worldBridge, world);
 
         fullBlock.add(new BoundingBox(0, 0, 0, 1, 1, 1));
         tinyBlock.add(new BoundingBox(0.4, 0, 0.4, 0.6, 1, 0.6));

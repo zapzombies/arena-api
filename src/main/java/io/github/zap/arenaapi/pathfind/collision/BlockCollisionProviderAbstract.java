@@ -47,15 +47,6 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
     }
 
     @Override
-    public void updateRegion(@NotNull ChunkBounds coordinates) {}
-
-    @Override
-    public void clearRegion(@NotNull ChunkBounds coordinates) {}
-
-    @Override
-    public void clearForWorld() {}
-
-    @Override
     public @Nullable BlockCollisionView getBlock(int x, int y, int z) {
         CollisionChunkView view = chunkAt(x >> 4, z >> 4);
 

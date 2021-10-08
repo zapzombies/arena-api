@@ -1,5 +1,6 @@
 package io.github.zap.arenaapi.pathfind.engine;
 
+import io.github.zap.arenaapi.ArenaApi;
 import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProvider;
 import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProviders;
 import io.github.zap.arenaapi.pathfind.context.PathfinderContext;
@@ -28,6 +29,6 @@ class AsyncProxyPathfinderEngine extends AsyncPathfinderEngineAbstract<Pathfinde
 
     @Override
     protected @NotNull BlockCollisionProvider makeBlockCollisionProvider(@NotNull World world) {
-        return BlockCollisionProviders.proxyAsyncProvider(world, MAX_THREADS);
+        return BlockCollisionProviders.proxyAsyncProvider(plugin, ArenaApi.getInstance().getNmsBridge().worldBridge(), world);
     }
 }
