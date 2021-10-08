@@ -29,8 +29,6 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
     }
 
     private void onChunkUnload(Object sender, ChunkUnloadEvent args) {
-        System.out.println("Caught chunk unload " + args.getChunk());
-
         Chunk chunk = args.getChunk();
         long chunkKey = chunkKey(chunk.getX(), chunk.getZ());
 
