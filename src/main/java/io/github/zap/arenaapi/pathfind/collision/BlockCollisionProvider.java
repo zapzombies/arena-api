@@ -36,11 +36,7 @@ public interface BlockCollisionProvider extends BlockSource {
      */
     boolean supportsAsync();
 
-    void updateRegion(@NotNull ChunkBounds coordinates);
-
-    void clearRegion(@NotNull ChunkBounds coordinates);
-
-    void clearForWorld();
+    void unload();
 
     boolean hasChunk(int x, int z);
 

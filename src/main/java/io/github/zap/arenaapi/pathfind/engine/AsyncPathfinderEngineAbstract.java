@@ -1,9 +1,11 @@
 package io.github.zap.arenaapi.pathfind.engine;
 
+import io.github.zap.arenaapi.nms.common.world.WorldBridge;
 import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProvider;
 import io.github.zap.arenaapi.pathfind.operation.PathOperation;
 import io.github.zap.arenaapi.pathfind.path.PathResult;
 import io.github.zap.arenaapi.pathfind.context.PathfinderContext;
+import io.github.zap.commons.event.Event;
 import org.bukkit.World;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -28,19 +30,14 @@ abstract class AsyncPathfinderEngineAbstract<T extends PathfinderContext> implem
 
     private final Map<UUID, T> contexts;
     protected final Plugin plugin;
+    protected final WorldBridge bridge;
 
-    AsyncPathfinderEngineAbstract(@NotNull Map<UUID, T> contexts, @NotNull Plugin plugin) {
+    AsyncPathfinderEngineAbstract(@NotNull Map<UUID, T> contexts, @NotNull Plugin plugin, @NotNull WorldBridge bridge) {
         this.contexts = contexts;
         this.plugin = plugin;
-
-        try {
-            WorldUnloadEvent.getHandlerList().register(new RegisteredListener(this,
-                    EventExecutor.create(AsyncPathfinderEngineAbstract.class.getDeclaredMethod(
-                            "onWorldUnload", WorldUnloadEvent.class), WorldUnloadEvent.class),
-                    EventPriority.MONITOR, plugin, true));
-        } catch (NoSuchMethodException error) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to register onWorldUnload", error);
-        }
+        this.bridge = bridge;
+        Event.bukkitProxy(plugin, WorldUnloadEvent.class, EventPriority.MONITOR, true)
+                .addHandler(this::onWorldUnload);
     }
 
     @Override
@@ -69,11 +66,7 @@ abstract class AsyncPathfinderEngineAbstract<T extends PathfinderContext> implem
         return plugin;
     }
 
-    protected void preProcess(@NotNull T context, @NotNull PathOperation operation) {}
-
     protected @Nullable PathResult processOperation(@NotNull T context, @NotNull PathOperation operation) {
-        preProcess(context, operation);
-
         while(operation.state() == PathOperation.State.STARTED) {
             for(int i = 0; i < operation.iterations(); i++) {
                 if(operation.step(context)) {
@@ -97,12 +90,11 @@ abstract class AsyncPathfinderEngineAbstract<T extends PathfinderContext> implem
 
     protected abstract @NotNull BlockCollisionProvider makeBlockCollisionProvider(@NotNull World world);
 
-    @EventHandler
-    private void onWorldUnload(@NotNull WorldUnloadEvent event) {
+    private void onWorldUnload(Object sender, WorldUnloadEvent event) {
         PathfinderContext context = contexts.remove(event.getWorld().getUID());
 
         if(context != null) {
-            context.blockProvider().clearForWorld();
+            context.blockProvider().unload();
             plugin.getLogger().info("Pathfinding context for world " + event.getWorld().getName() + " unloaded");
         }
     }

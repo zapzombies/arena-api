@@ -27,18 +27,15 @@ public final class PathDestinations {
         return basic(target, vector.x(), vector.y(), vector.z());
     }
 
-    public static @NotNull PathDestination fromEntity(@NotNull Entity entity, @NotNull PathTarget target, boolean findBlock) {
+    public static @NotNull PathDestination fromEntity(@NotNull Entity entity, @NotNull WorldBridge bridge,
+                                                      @NotNull PathTarget target, boolean findBlock) {
         Location location = entity.getLocation();
 
         if(Utils.isValidLocation(entity.getLocation())) {
             if(findBlock) {
-                BlockCollisionView highest = Utils.highestBlockBelow(BlockCollisionProviders
-                        .proxyAsyncProvider(entity.getWorld(), 1), entity.getBoundingBox());
-
-                if(highest != null) {
-                    return new PathDestinationImpl(target, highest.x(), highest.collision().isFull() ?
-                            highest.y() + 1 : highest.y(), highest.z());
-                }
+                BlockCollisionView highest = Utils.highestBlockBelow(entity.getWorld(), bridge, entity.getBoundingBox());
+                return new PathDestinationImpl(target, highest.x(), highest.collision().isFull() ?
+                        highest.y() + 1 : highest.y(), highest.z());
             }
         }
 

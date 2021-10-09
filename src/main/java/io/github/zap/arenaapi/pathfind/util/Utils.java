@@ -1,12 +1,17 @@
 package io.github.zap.arenaapi.pathfind.util;
 
+import io.github.zap.arenaapi.nms.common.util.BoundedBlockIterator;
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
+import io.github.zap.arenaapi.nms.common.world.WorldBridge;
 import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProvider;
 import io.github.zap.commons.vectors.Vectors;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Utils {
@@ -14,15 +19,24 @@ public class Utils {
         return location.getWorld().getWorldBorder().isInside(location) && location.getY() >= 0 && location.getY() < 256;
     }
 
-    public static BlockCollisionView highestBlockBelow(@NotNull BlockCollisionProvider provider, @NotNull BoundingBox boundingBox) {
+    public static @NotNull BlockCollisionView highestBlockBelow(@NotNull World world, @NotNull WorldBridge bridge,
+                                                                @NotNull BoundingBox boundingBox) {
         BoundingBox shrunkenBounds = boundingBox.clone().resize(
                 boundingBox.getMinX(), boundingBox.getMinY(), boundingBox.getMinZ(),
                 boundingBox.getMaxX(), boundingBox.getMinY() + 1, boundingBox.getMaxZ());
 
-        List<BlockCollisionView> views;
+        List<BlockCollisionView> views = new ArrayList<>();
         do {
             shrunkenBounds.shift(0, -1, 0);
-            views = provider.solidsOverlapping(shrunkenBounds);
+            BoundedBlockIterator iterator = new BoundedBlockIterator((x, y, z) ->
+                    bridge.collisionFor(world.getBlockAt(x, y, z)), shrunkenBounds);
+
+            while(iterator.hasNext()) {
+                BlockCollisionView view = iterator.next();
+                if(view.overlaps(shrunkenBounds)) {
+                    views.add(view);
+                }
+            }
         }
         while(views.isEmpty() && shrunkenBounds.getMinY() >= 1);
 
@@ -41,6 +55,7 @@ public class Utils {
             return highestView;
         }
 
-        return provider.getBlock(Vectors.asIntFloor(boundingBox.getCenterX(), 0, boundingBox.getCenterZ()));
+        return bridge.collisionFor(world.getBlockAt(NumberConversions.floor(boundingBox.getCenterX()),
+                NumberConversions.floor(boundingBox.getMinY()), NumberConversions.floor(boundingBox.getCenterZ())));
     }
 }

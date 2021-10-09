@@ -1,5 +1,6 @@
 package io.github.zap.arenaapi.pathfind.engine;
 
+import io.github.zap.arenaapi.nms.common.world.WorldBridge;
 import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProvider;
 import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProviders;
 import io.github.zap.arenaapi.pathfind.context.PathfinderContext;
@@ -10,13 +11,12 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
 class AsyncProxyPathfinderEngine extends AsyncPathfinderEngineAbstract<PathfinderContext> {
     private static final int PATH_CAPACITY = 32;
 
-    AsyncProxyPathfinderEngine(@NotNull Plugin plugin) {
-        super(new ConcurrentHashMap<>(), plugin);
+    AsyncProxyPathfinderEngine(@NotNull Plugin plugin, @NotNull WorldBridge bridge) {
+        super(new ConcurrentHashMap<>(), plugin, bridge);
     }
 
     @NotNull
@@ -28,6 +28,6 @@ class AsyncProxyPathfinderEngine extends AsyncPathfinderEngineAbstract<Pathfinde
 
     @Override
     protected @NotNull BlockCollisionProvider makeBlockCollisionProvider(@NotNull World world) {
-        return BlockCollisionProviders.proxyAsyncProvider(world, MAX_THREADS);
+        return BlockCollisionProviders.proxyAsyncProvider(plugin, bridge, world);
     }
 }

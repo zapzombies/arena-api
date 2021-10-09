@@ -32,8 +32,7 @@ public interface PathNode extends Vector3I {
      * Returns the offset vector for this PathNode. See
      * {@link io.github.zap.arenaapi.pathfind.path.PathNode#setOffsetVector(Vector3I)} for more information about how
      * the offset vector should be interpreted.
-     * @return The offset vector of this PathNode. Typically, defaults to {@link io.github.zap.vector.Vectors#ZERO},
-     * but is not required to do so
+     * @return The offset vector of this PathNode.
      */
     @NotNull Vector3I getOffsetVector();
 

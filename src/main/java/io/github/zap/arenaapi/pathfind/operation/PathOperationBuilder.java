@@ -1,5 +1,6 @@
 package io.github.zap.arenaapi.pathfind.operation;
 
+import io.github.zap.arenaapi.nms.common.world.WorldBridge;
 import io.github.zap.arenaapi.pathfind.agent.PathAgent;
 import io.github.zap.arenaapi.pathfind.agent.PathAgents;
 import io.github.zap.arenaapi.pathfind.calculate.*;
@@ -66,8 +67,9 @@ public class PathOperationBuilder {
         return this;
     }
 
-    public @NotNull PathOperationBuilder withDestination(@NotNull Entity destination, @NotNull PathTarget target) {
-        return withDestination(PathDestinations.fromEntity(destination, target, true));
+    public @NotNull PathOperationBuilder withDestination(@NotNull Entity destination, @NotNull WorldBridge bridge,
+                                                         @NotNull PathTarget target) {
+        return withDestination(PathDestinations.fromEntity(destination, bridge, target, true));
     }
 
     public @NotNull PathOperationBuilder withDestination(@NotNull Vector3I destination) {
