@@ -33,7 +33,7 @@ public class Utils {
 
             while(iterator.hasNext()) {
                 BlockCollisionView view = iterator.next();
-                if(view.overlaps(boundingBox)) {
+                if(view.overlaps(shrunkenBounds)) {
                     views.add(view);
                 }
             }
