@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -16,7 +17,7 @@ public class CollisionChunkProxy_v1_16_R3 extends CollisionChunkAbstract_v1_16_R
     private static final Map<VoxelShape, VoxelShapeWrapper> SHAPE_MAP = Collections.synchronizedMap(new IdentityHashMap<>());
     private static final BlockData AIR_DATA = org.bukkit.Material.AIR.createBlockData();
 
-    private final WeakReference<Chunk> chunk;
+    private final Reference<Chunk> chunk;
 
     CollisionChunkProxy_v1_16_R3(@NotNull Chunk chunk) {
         super(chunk.locX, chunk.locZ);
@@ -41,7 +42,7 @@ public class CollisionChunkProxy_v1_16_R3 extends CollisionChunkAbstract_v1_16_R
                 }
 
                 VoxelShape voxelShape = data.getCollisionShape(currentChunk, new BlockPosition(chunkX, chunkY, chunkZ));
-                wrapper = SHAPE_MAP.computeIfAbsent(voxelShape, (key) -> new VoxelShapeWrapper_v1_16_R3(voxelShape));
+                wrapper = SHAPE_MAP.computeIfAbsent(voxelShape, (key) -> new VoxelShapeWrapper_v1_16_R3(key));
                 bukkitData = data.createCraftBlockData();
             }
             else {
