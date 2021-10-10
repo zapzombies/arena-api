@@ -179,7 +179,12 @@ public class Event<T> implements Disposable {
         if(!thrownExceptions.isEmpty()) {
             List<Exception> thrown = new ArrayList<>(thrownExceptions);
             thrownExceptions.clear();
-            throw new AggregateException("exception(s) during event processing", thrown);
+            RuntimeException runtimeException = new AggregateException("exception(s) during event processing", thrown);
+            for (Exception e : thrown) {
+                runtimeException.addSuppressed(e);
+            }
+
+            throw runtimeException;
         }
     }
 
