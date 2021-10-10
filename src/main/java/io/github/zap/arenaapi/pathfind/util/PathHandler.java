@@ -7,6 +7,8 @@ import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -20,28 +22,30 @@ import java.util.logging.Level;
  */
 public class PathHandler {
     private final PathfinderEngine engine;
-    private Future<PathResult> result;
+    private Reference<Future<PathResult>> resultReference = new WeakReference<>(null);
 
     public PathHandler(@NotNull PathfinderEngine engine) {
         this.engine = engine;
     }
 
     public void giveOperation(@NotNull PathOperation operation, @NotNull World world) {
-        if(result == null) {
-            result = engine.giveOperation(operation, world);
+        if(resultReference.get() == null) {
+            resultReference = new WeakReference<>(engine.giveOperation(operation, world));
         }
     }
 
     public @Nullable PathResult tryTakeResult() {
+        Future<PathResult> result = resultReference.get();
+
         if(result != null && result.isDone()) {
             if(result.isCancelled()) {
-                result = null;
+                resultReference.clear();
                 return null;
             }
             else if(result.isDone()) {
                 try {
                     PathResult value = result.get();
-                    result = null;
+                    resultReference = new WeakReference<>(null);
                     return value;
                 } catch (InterruptedException exception) {
                     engine.getPlugin().getLogger().log(Level.WARNING, "Interrupted when retrieving PathResult",
@@ -58,6 +62,8 @@ public class PathHandler {
     }
 
     public boolean isRunning() {
+        Future<PathResult> result = resultReference.get();
+
         if(result != null) {
             return !result.isDone();
         }

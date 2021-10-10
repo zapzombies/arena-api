@@ -43,4 +43,6 @@ public interface PathfinderEngine {
     boolean isAsync();
 
     @NotNull Plugin getPlugin();
+
+    void unload();
 }
