@@ -50,11 +50,11 @@ class WalkNodeStepper implements NodeStepper {
             }
 
             Vector3D seek = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode.clone(), true);
-            Vector3D shift = jumpTestResult.translationVector();
 
             if(seek != null) {
+                Vector3D shift = jumpTestResult.translationVector();
                 BoundingBox adjusted = agentBounds.clone().shift(shift.x(), shift.y(), shift.z());
-                double dY = seek.y() - agentBounds.getMinY();
+                double dY = seek.y() - position.y();
 
                 boolean shiftCollides = collisionProvider.collisionMovingAlong(adjusted, Vectors.of(0, dY, 0),
                         true).collides();
@@ -106,7 +106,7 @@ class WalkNodeStepper implements NodeStepper {
         do {
             List<BlockCollisionView> collisions = collisionProvider.solidsOverlapping(shiftedBounds);
 
-            double stepDelta;
+            double stepDelta; //stepDelta i'm stuck
             if(collisions.isEmpty()) {
                 if(isJump) { //termination condition for jumping
                     return Vectors.of(shiftedBounds.getCenterX(), shiftedBounds.getMinY(), shiftedBounds.getCenterZ());
@@ -127,7 +127,7 @@ class WalkNodeStepper implements NodeStepper {
             }
 
             shiftedBounds.shift(0, stepDelta, 0);
-            delta += Math.abs(stepDelta); //stepDelta i'm stuck
+            delta += Math.abs(stepDelta);
         }
         while(DoubleMath.fuzzyCompare(delta, maximumDelta, Vectors.EPSILON) <= 0);
 
@@ -171,7 +171,7 @@ class WalkNodeStepper implements NodeStepper {
         Vector3I agentBlockPosition = Vectors.asIntFloor(agentPosition);
         Vector3I targetBlock = Vectors.add(agentBlockPosition, direction);
         Vector3D targetBlockCenter = Vectors.add(targetBlock, BLOCK_OFFSET);
-        return Vectors.of(targetBlockCenter.x() - agentPosition.x(), direction.y(),
-                targetBlockCenter.z() - agentPosition.z());
+        return Vectors.of((targetBlockCenter.x() - agentPosition.x()) * Math.abs(direction.x()), direction.y(),
+                (targetBlockCenter.z() - agentPosition.z()) * Math.abs(direction.z()));
     }
 }

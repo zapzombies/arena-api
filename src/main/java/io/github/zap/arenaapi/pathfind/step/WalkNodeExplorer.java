@@ -1,6 +1,7 @@
 package io.github.zap.arenaapi.pathfind.step;
 
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
+import io.github.zap.arenaapi.nms.common.world.VoxelShapeWrapper;
 import io.github.zap.arenaapi.pathfind.chunk.ChunkBounds;
 import io.github.zap.arenaapi.pathfind.agent.PathAgent;
 import io.github.zap.arenaapi.pathfind.path.PathNode;
@@ -62,8 +63,20 @@ class WalkNodeExplorer implements NodeExplorer {
                 if(nodePosition != null && chunkBounds.hasBlock(nodePosition)) {
                     T newNode = pathNodeFactory.make(nodePosition);
 
+                    //exists to account for mojang's buggy code
                     if(currentBlock.collision().isPartial() && nodePosition.y() > position.y()) {
-                        newNode.setOffsetVector(Direction.UP);
+                        BlockCollisionView view = context.blockProvider().getBlock(nextTarget);
+                        Vector3I offset = Direction.UP;
+
+                        if(view != null) {
+                            VoxelShapeWrapper collision = view.collision();
+                            if(!collision.isEmpty() && collision.boundingBox().maxY() > 1) {
+                                //necessary to allow mobs to jump on fences
+                                offset = Vectors.of(0, 2, 0);
+                            }
+                        }
+
+                        newNode.setOffsetVector(offset);
                     }
 
                     buffer[j++] = newNode;

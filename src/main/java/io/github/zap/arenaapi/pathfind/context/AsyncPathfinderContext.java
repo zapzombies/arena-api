@@ -8,17 +8,22 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public abstract class PathfinderContextAbstract implements PathfinderContext {
+public class AsyncPathfinderContext implements PathfinderContext {
     protected final Queue<PathResult> successfulPaths = new ArrayDeque<>();
     protected final Queue<PathResult> failedPaths = new ArrayDeque<>();
 
+    protected final ExecutorService executor;
     protected final BlockCollisionProvider blockCollisionProvider;
     protected final PathMerger merger;
     protected final int pathCapacity;
 
-    PathfinderContextAbstract(@NotNull BlockCollisionProvider blockCollisionProvider,
-                              @NotNull PathMerger merger, int pathCapacity) {
+    public AsyncPathfinderContext(@NotNull ExecutorService executor, @NotNull BlockCollisionProvider blockCollisionProvider,
+                                  @NotNull PathMerger merger, int pathCapacity) {
+        this.executor = executor;
         this.blockCollisionProvider = blockCollisionProvider;
         this.merger = merger;
         this.pathCapacity = pathCapacity;
@@ -45,5 +50,14 @@ public abstract class PathfinderContextAbstract implements PathfinderContext {
     @Override
     public @NotNull Collection<PathResult> successfulPaths() {
         return successfulPaths;
+    }
+
+    @Override
+    public String toString() {
+        return "AsyncPathfinderContext{blockCollisionProvider=" + blockCollisionProvider + "}";
+    }
+
+    public @NotNull ExecutorService executor() {
+        return executor;
     }
 }
