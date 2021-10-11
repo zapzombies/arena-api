@@ -8,7 +8,9 @@ public interface MobNavigator {
 
     @Nullable PathEntityWrapper currentPath();
 
-    boolean isIdle();
+    boolean hasActivePath();
+
+    boolean isOnPath();
 
     void pauseNavigating();
 

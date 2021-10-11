@@ -41,6 +41,7 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
                 }
             }
 
+            currentPath = null;
             a((PathEntity)null, speed);
         }
     }
@@ -51,8 +52,25 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     }
 
     @Override
-    public boolean isIdle() {
-        return m();
+    public boolean hasActivePath() {
+        return !m();
+    }
+
+    @Override
+    public boolean isOnPath() {
+        PathPoint currentPoint;
+        if(currentPath != null && (currentPoint = currentPath.pathEntity().i()) != null) {
+            Vec3D currentPos = getEntity().getPositionVector();
+
+            int entityX = NumberConversions.floor(currentPos.x);
+            int entityY = NumberConversions.floor(currentPos.y);
+            int entityZ = NumberConversions.floor(currentPos.z);
+
+            return currentPoint.getX() == entityX && currentPoint.getY() == entityY && currentPoint.getZ() == entityZ;
+        }
+
+
+        return false;
     }
 
     @Override
