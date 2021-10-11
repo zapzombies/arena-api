@@ -65,18 +65,7 @@ class WalkNodeExplorer implements NodeExplorer {
 
                     //exists to account for mojang's buggy code
                     if(currentBlock.collision().isPartial() && nodePosition.y() > position.y()) {
-                        BlockCollisionView view = context.blockProvider().getBlock(nextTarget);
-                        Vector3I offset = Direction.UP;
-
-                        if(view != null) {
-                            VoxelShapeWrapper collision = view.collision();
-                            if(!collision.isEmpty() && collision.boundingBox().maxY() > 1) {
-                                //necessary to allow mobs to jump on fences
-                                offset = Vectors.of(0, 2, 0);
-                            }
-                        }
-
-                        newNode.setOffsetVector(offset);
+                        newNode.setOffsetVector(Direction.UP);
                     }
 
                     buffer[j++] = newNode;

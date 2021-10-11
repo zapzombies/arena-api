@@ -13,6 +13,7 @@ import io.github.zap.arenaapi.pathfind.step.NodeExplorer;
 import io.github.zap.arenaapi.pathfind.step.NodeExplorers;
 import io.github.zap.arenaapi.pathfind.step.NodeStepper;
 import io.github.zap.arenaapi.pathfind.step.NodeSteppers;
+import io.github.zap.commons.vectors.Vector3D;
 import io.github.zap.commons.vectors.Vector3I;
 import io.github.zap.commons.vectors.Vectors;
 import org.bukkit.Location;
@@ -27,6 +28,8 @@ public class PathOperationBuilder {
     private static final double DEFAULT_JUMP_HEIGHT = 1.125;
     private static final double DEFAULT_FALL_TOLERANCE = 16;
 
+    private final WorldBridge bridge;
+
     private PathAgent agent;
     private Entity agentEntity;
     private double jumpHeight = DEFAULT_JUMP_HEIGHT;
@@ -40,7 +43,9 @@ public class PathOperationBuilder {
     private NodeStepper nodeStepper;
     private int pathfindRadius = DEFAULT_PATHFIND_RADIUS;
 
-    public PathOperationBuilder() {}
+    public PathOperationBuilder(@NotNull WorldBridge bridge) {
+        this.bridge = Objects.requireNonNull(bridge, "bridge cannot be null");
+    }
 
     public @NotNull PathOperationBuilder withAgent(@NotNull PathAgent agent) {
         this.agent = agent;
@@ -121,7 +126,7 @@ public class PathOperationBuilder {
         heuristicCalculator = heuristicCalculator == null ? HeuristicCalculators.distanceOnly() : heuristicCalculator;
         aversionCalculator = aversionCalculator == null ? AversionCalculators.defaultWalk() : aversionCalculator;
         successCondition = successCondition == null ? SuccessConditions.sameBlock() : successCondition;
-        agent = agent == null ? PathAgents.fromEntity(agentEntity, jumpHeight, fallTolerance) : agent;
+        agent = agent == null ? PathAgents.fromEntity(agentEntity, bridge, jumpHeight, fallTolerance) : agent;
         chunkBounds = chunkBounds == null ?
                 ChunkCoordinateProviders.squareFromCenter(Vectors.asChunk(agent), pathfindRadius) : chunkBounds;
         nodeExplorer = nodeExplorer == null ? NodeExplorers.basicWalk(nodeStepper == null ?

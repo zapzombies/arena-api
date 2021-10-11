@@ -28,4 +28,9 @@ public record PathEntityWrapper_v1_16_R3(PathEntity pathEntity) implements PathE
         PathPoint last = pathEntity.d();
         return last == null ? null : new PathPointWrapper_v1_16_R3(last);
     }
+
+    @Override
+    public void addPoint(int x, int y, int z) {
+        pathEntity.getPoints().add(new PathPoint(x, y, z));
+    }
 }

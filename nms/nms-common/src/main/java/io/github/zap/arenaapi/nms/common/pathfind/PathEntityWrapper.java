@@ -10,4 +10,6 @@ public interface PathEntityWrapper {
     boolean hasFinished();
 
     @Nullable PathPointWrapper lastPoint();
+
+    void addPoint(int x, int y, int z);
 }

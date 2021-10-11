@@ -1,8 +1,12 @@
 package io.github.zap.arenaapi.pathfind.agent;
 
+import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
+import io.github.zap.arenaapi.nms.common.world.WorldBridge;
+import io.github.zap.arenaapi.pathfind.util.Utils;
 import io.github.zap.commons.vectors.Vector3D;
 import io.github.zap.commons.vectors.Vectors;
 import org.apache.commons.lang3.Validate;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
@@ -37,11 +41,15 @@ public final class PathAgents {
         return new PathAgentImpl(vector.x(), vector.y(), vector.z(), width, height, jumpHeight, fallTolerance);
     }
 
-    public static @NotNull PathAgent fromEntity(@NotNull Entity entity, double jumpHeight, double fallTolerance) {
+    public static @NotNull PathAgent fromEntity(@NotNull Entity entity, @NotNull WorldBridge bridge, double jumpHeight, double fallTolerance) {
         while(entity.getVehicle() != null) {
             entity = entity.getVehicle();
         }
 
-        return fromVector(Vectors.of(entity.getLocation()), entity.getWidth(), entity.getHeight(), jumpHeight, fallTolerance);
+        BlockCollisionView view = Utils.highestBlockBelow(entity.getWorld(), bridge, entity.getBoundingBox());
+        Location location = entity.getLocation();
+
+        return fromVector(Vectors.of(location.getX(), view.exactY(), location.getZ()), entity.getWidth(),
+                entity.getHeight(), jumpHeight, fallTolerance);
     }
 }
