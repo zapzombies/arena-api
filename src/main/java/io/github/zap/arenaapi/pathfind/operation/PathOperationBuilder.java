@@ -28,8 +28,6 @@ public class PathOperationBuilder {
     private static final double DEFAULT_JUMP_HEIGHT = 1.125;
     private static final double DEFAULT_FALL_TOLERANCE = 16;
 
-    private final WorldBridge bridge;
-
     private PathAgent agent;
     private Entity agentEntity;
     private double jumpHeight = DEFAULT_JUMP_HEIGHT;
@@ -42,10 +40,6 @@ public class PathOperationBuilder {
     private ChunkBounds chunkBounds;
     private NodeStepper nodeStepper;
     private int pathfindRadius = DEFAULT_PATHFIND_RADIUS;
-
-    public PathOperationBuilder(@NotNull WorldBridge bridge) {
-        this.bridge = Objects.requireNonNull(bridge, "bridge cannot be null");
-    }
 
     public @NotNull PathOperationBuilder withAgent(@NotNull PathAgent agent) {
         this.agent = agent;
@@ -126,7 +120,7 @@ public class PathOperationBuilder {
         heuristicCalculator = heuristicCalculator == null ? HeuristicCalculators.distanceOnly() : heuristicCalculator;
         aversionCalculator = aversionCalculator == null ? AversionCalculators.defaultWalk() : aversionCalculator;
         successCondition = successCondition == null ? SuccessConditions.sameBlock() : successCondition;
-        agent = agent == null ? PathAgents.fromEntity(agentEntity, bridge, jumpHeight, fallTolerance) : agent;
+        agent = agent == null ? PathAgents.fromEntity(agentEntity, jumpHeight, fallTolerance) : agent;
         chunkBounds = chunkBounds == null ?
                 ChunkCoordinateProviders.squareFromCenter(Vectors.asChunk(agent), pathfindRadius) : chunkBounds;
         nodeExplorer = nodeExplorer == null ? NodeExplorers.basicWalk(nodeStepper == null ?
