@@ -29,12 +29,11 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
     }
 
     private void onChunkUnload(Object sender, ChunkUnloadEvent args) {
-        if(args.getWorld() == world) {
+        if(args.getWorld().getUID().equals(world.getUID())) {
             Chunk chunk = args.getChunk();
-            long chunkKey = chunkKey(chunk.getX(), chunk.getZ());
 
             rwl.writeLock().lock();
-            chunkViewMap.remove(chunkKey);
+            chunkViewMap.remove(chunkKey(chunk.getX(), chunk.getZ()));
             rwl.writeLock().unlock();
         }
     }
