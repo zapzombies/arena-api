@@ -40,11 +40,14 @@ class WalkNodeExplorer implements NodeExplorer {
         }
 
         Vector3D position;
+        boolean isFirst;
         if(Vectors.equals(Vectors.asIntFloor(agent), current)) { //use exact agent position for first node...
             position = agent;
+            isFirst = true;
         }
         else { //...otherwise, make the assumption it's trying to pathfind from the exact center of the block
             position = Vectors.of(current.x() + 0.5, currentBlock.exactY(), current.z() + 0.5);
+            isFirst = false;
         }
 
         int j = 0;
@@ -58,7 +61,7 @@ class WalkNodeExplorer implements NodeExplorer {
 
             if(chunkBounds.hasBlock(nextTarget)) {
                 Vector3I nodePosition = stepper.stepDirectional(context.blockProvider(), currentBlock, agent, position,
-                        direction);
+                        direction, isFirst);
 
                 if(nodePosition != null && chunkBounds.hasBlock(nodePosition)) {
                     T newNode = pathNodeFactory.make(nodePosition);

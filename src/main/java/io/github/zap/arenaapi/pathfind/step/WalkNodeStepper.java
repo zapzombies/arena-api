@@ -23,23 +23,29 @@ class WalkNodeStepper implements NodeStepper {
     @Override
     public @Nullable Vector3I stepDirectional(@NotNull BlockCollisionProvider collisionProvider,
                                               @NotNull BlockCollisionView blockAtFeet, @NotNull PathAgent agent,
-                                              @NotNull Vector3D position, @NotNull Direction direction) {
+                                              @NotNull Vector3D position, @NotNull Direction direction,
+                                              boolean isFirst) {
         return switch (direction) {
             case UP, NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST ->
-                    doStep(collisionProvider, blockAtFeet, agent, position, direction);
+                    doStep(collisionProvider, blockAtFeet, agent, position, direction, isFirst);
             default -> null;
         };
     }
 
     private Vector3I doStep(BlockCollisionProvider collisionProvider, BlockCollisionView blockAtFeet, PathAgent agent,
-                            Vector3D position, Direction direction) {
+                            Vector3D position, Direction direction, boolean isFirst) {
         Vector3D translate = computeTranslation(position, direction);
 
         BoundingBox agentBounds = getAgentBounds(agent, position);
         BlockCollisionProvider.HitResult jumpTestResult = collisionProvider.collisionMovingAlong(agentBounds, translate,
                 false);
 
-        if(direction == Direction.UP && !jumpTestResult.blockAtAgent()) {
+        if(!isFirst) { //if not first
+            if(jumpTestResult.blockAtAgent()) { //...and there's a block, return null
+                return null;
+            }
+        }
+        else if(direction == Direction.UP && !jumpTestResult.blockAtAgent()) {
             return null;
         }
 

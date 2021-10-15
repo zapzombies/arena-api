@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 @FunctionalInterface
 public interface NodeStepper {
-    @Nullable Vector3I stepDirectional(@NotNull BlockCollisionProvider collisionProvider, @NotNull BlockCollisionView blockAtFeet,
-                                       @NotNull PathAgent agent, @NotNull Vector3D position, @NotNull Direction direction);
+    @Nullable Vector3I stepDirectional(@NotNull BlockCollisionProvider collisionProvider,
+                                       @NotNull BlockCollisionView blockAtFeet, @NotNull PathAgent agent,
+                                       @NotNull Vector3D position, @NotNull Direction direction, boolean isFirst);
 }
