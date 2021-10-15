@@ -60,8 +60,8 @@ class WalkNodeExplorer implements NodeExplorer {
             Vector3I nextTarget = Vectors.add(current, direction);
 
             if(chunkBounds.hasBlock(nextTarget)) {
-                Vector3I nodePosition = stepper.stepDirectional(context.blockProvider(), currentBlock, agent, position,
-                        direction, isFirst);
+                Vector3I nodePosition = stepper.stepDirectional(context.blockProvider(), agent, position, direction,
+                        isFirst);
 
                 if(nodePosition != null && chunkBounds.hasBlock(nodePosition)) {
                     T newNode = pathNodeFactory.make(nodePosition);

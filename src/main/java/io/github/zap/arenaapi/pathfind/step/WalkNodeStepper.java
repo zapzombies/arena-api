@@ -6,6 +6,7 @@ import io.github.zap.arenaapi.pathfind.agent.PathAgent;
 import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProvider;
 import io.github.zap.commons.vectors.*;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,18 +23,18 @@ class WalkNodeStepper implements NodeStepper {
 
     @Override
     public @Nullable Vector3I stepDirectional(@NotNull BlockCollisionProvider collisionProvider,
-                                              @NotNull BlockCollisionView blockAtFeet, @NotNull PathAgent agent,
+                                              @NotNull PathAgent agent,
                                               @NotNull Vector3D position, @NotNull Direction direction,
                                               boolean isFirst) {
         return switch (direction) {
             case UP, NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST ->
-                    doStep(collisionProvider, blockAtFeet, agent, position, direction, isFirst);
+                    doStep(collisionProvider, agent, position, direction, isFirst);
             default -> null;
         };
     }
 
-    private Vector3I doStep(BlockCollisionProvider collisionProvider, BlockCollisionView blockAtFeet, PathAgent agent,
-                            Vector3D position, Direction direction, boolean isFirst) {
+    private Vector3I doStep(BlockCollisionProvider collisionProvider, PathAgent agent, Vector3D position,
+                            Direction direction, boolean isFirst) {
         Vector3D translate = computeTranslation(position, direction);
 
         BoundingBox agentBounds = getAgentBounds(agent, position);
@@ -78,25 +79,9 @@ class WalkNodeStepper implements NodeStepper {
             }
         }
         else {
-            if(direction == Direction.UP) {
-                if(blockAtFeet != null) {
-                    if(blockAtFeet.collision().isEmpty()) {
-                        return null;
-                    }
-
-                    double exactY = blockAtFeet.exactY();
-                    if(exactY > position.y() && (exactY - position.y()) < agent.jumpHeight()) {
-                        return Vectors.asIntFloor(position.x(), exactY, position.z());
-                    }
-                }
-
-                return null;
-            }
-
-            Vector3D result = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode, false);
-
-            if(result != null && !Vectors.fuzzyEquals(result, position)) {
-                return Vectors.asIntFloor(result);
+            Vector3D seek = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode, false);
+            if(seek != null) {
+                return Vectors.asIntFloor(seek);
             }
         }
 
@@ -109,13 +94,17 @@ class WalkNodeStepper implements NodeStepper {
         double maximumDelta = isJump ? agent.jumpHeight() : agent.fallTolerance();
         double delta = 0;
 
+        double hX = shiftedBounds.getCenterX();
+        double hY = shiftedBounds.getMinY();
+        double hZ = shiftedBounds.getCenterZ();
+
         do {
             List<BlockCollisionView> collisions = collisionProvider.solidsOverlapping(shiftedBounds);
 
             double stepDelta; //stepDelta i'm stuck
             if(collisions.isEmpty()) {
                 if(isJump) { //termination condition for jumping
-                    return Vectors.of(shiftedBounds.getCenterX(), shiftedBounds.getMinY(), shiftedBounds.getCenterZ());
+                    return Vectors.of(hX + 0.5, hY, hZ + 0.5);
                 }
                 else {
                     stepDelta = -agent.height();
@@ -124,11 +113,15 @@ class WalkNodeStepper implements NodeStepper {
             else {
                 BlockCollisionView highest = selectHighest(collisions);
 
+                hX = highest.x();
+                hY = highest.exactY();
+                hZ = highest.z();
+
                 if(isJump) {
                     stepDelta = highest.exactY() - shiftedBounds.getMinY();
                 }
                 else { //termination condition for falling
-                    return Vectors.of(shiftedBounds.getCenterX(), highest.exactY(), shiftedBounds.getCenterZ());
+                    return Vectors.of(highest.x() + 0.5, highest.exactY(), highest.z() + 0.5);
                 }
             }
 
@@ -177,7 +170,7 @@ class WalkNodeStepper implements NodeStepper {
         Vector3I agentBlockPosition = Vectors.asIntFloor(agentPosition);
         Vector3I targetBlock = Vectors.add(agentBlockPosition, direction);
         Vector3D targetBlockCenter = Vectors.add(targetBlock, BLOCK_OFFSET);
-        return Vectors.of((targetBlockCenter.x() - agentPosition.x()) * Math.abs(direction.x()), direction.y(),
-                (targetBlockCenter.z() - agentPosition.z()) * Math.abs(direction.z()));
+        return Vectors.of(targetBlockCenter.x() - agentPosition.x(), direction.y(),
+                targetBlockCenter.z() - agentPosition.z());
     }
 }
