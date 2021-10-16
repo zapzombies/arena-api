@@ -3,6 +3,7 @@ package io.github.zap.arenaapi.pathfind.collision;
 import io.github.zap.arenaapi.nms.common.world.CollisionChunkView;
 import io.github.zap.arenaapi.nms.common.world.WorldBridge;
 import io.github.zap.commons.event.Event;
+import io.github.zap.commons.utils.MathUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.bukkit.Chunk;
 import org.bukkit.World;
@@ -33,7 +34,7 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
             Chunk chunk = args.getChunk();
 
             rwl.writeLock().lock();
-            chunkViewMap.remove(chunkKey(chunk.getX(), chunk.getZ()));
+            chunkViewMap.remove(MathUtils.longFromInts(chunk.getX(), chunk.getZ()));
             rwl.writeLock().unlock();
         }
     }
@@ -56,7 +57,7 @@ class ProxyBlockCollisionProvider extends BlockCollisionProviderAbstract {
 
     @Override
     public @Nullable CollisionChunkView chunkAt(int x, int z) {
-        long key = chunkKey(x, z);
+        long key = MathUtils.longFromInts(x, z);
 
         rwl.readLock().lock();
         CollisionChunkView view = chunkViewMap.get(key);
