@@ -40,13 +40,6 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
                 if(sample.getX() == entityX && sample.getY() == entityY && sample.getZ() == entityZ) {
                     newPath.c(i);
                     a(newPath, speed);
-
-                    for(PathPoint point : newPath.getPoints()) {
-                        super.b.getWorld().spawnParticle(org.bukkit.Particle.REDSTONE,
-                                point.getX() + 0.5, point.getY() + 0.5, point.getZ() + 0.5, 1, 0, 0,
-                                0, new org.bukkit.Particle.DustOptions(Color.GREEN, 2));
-                    }
-
                     return;
                 }
             }
@@ -268,7 +261,6 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
 
         //|| this.a.b(this.c.h().l) && this.canAdvance(agentPos)
         if (flag || this.canAdvance(agentPos)) {
-            System.out.println("Continuing (flag = " + flag + ")");
             this.c.a();
         }
 
@@ -304,8 +296,6 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
         ++this.e;
 
         if (!this.m()) {
-            System.out.println(this.c.f());
-
             Vec3D vec3d;
             if (this.a()) { //if entity valid for pathfinding...
                 this.l();
