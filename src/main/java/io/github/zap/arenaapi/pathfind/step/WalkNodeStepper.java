@@ -7,6 +7,7 @@ import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProvider;
 import io.github.zap.commons.vectors.*;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.NumberConversions;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,13 +51,16 @@ class WalkNodeStepper implements NodeStepper {
             return null;
         }
 
-        BoundingBox agentBoundsAtTargetNode = agentBounds.clone().shift(translate.x(), translate.y(), translate.z());
         if(jumpTestResult.collides()) { //test if we need to jump
             if(direction.isIntercardinal() || direction == Direction.UP) { //mobs can't jump diagonally (thanks mojang)
                 return null;
             }
 
-            Vector3D seek = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode.clone(), true);
+            BlockCollisionView hitBlock = jumpTestResult.nearest();
+            BoundingBox agentBoundsAtHit = agentBounds.clone().shift(new Vector(hitBlock.x() + 0.5, position.y(),
+                    hitBlock.z() + 0.5).subtract(Vectors.asBukkit(position)));
+            Vector3D seek = seekDirectional(collisionProvider, agent, agentBoundsAtHit, hitBlock.x(), position.y(),
+                    hitBlock.z(), true);
 
             if(seek != null) {
                 Vector3D shift = jumpTestResult.translationVector();
@@ -79,7 +83,10 @@ class WalkNodeStepper implements NodeStepper {
             }
         }
         else {
-            Vector3D seek = seekDirectional(collisionProvider, agent, agentBoundsAtTargetNode, false);
+            BoundingBox agentBoundsAtTarget = agentBounds.clone().shift(translate.x(), translate.y(), translate.z());
+            Vector3D target = Vectors.add(position, translate);
+            Vector3D seek = seekDirectional(collisionProvider, agent, agentBoundsAtTarget, target.x(), target.y(),
+                    target.z(), false);
             if(seek != null) {
                 return Vectors.asIntFloor(seek);
             }
@@ -89,14 +96,10 @@ class WalkNodeStepper implements NodeStepper {
     }
 
     //WARNING mutates shiftedBounds, currently is never called multiple times on the same execution path
-    private Vector3D seekDirectional(BlockCollisionProvider collisionProvider, PathAgent agent, BoundingBox shiftedBounds,
-                                     boolean isJump) {
+    private Vector3D seekDirectional(BlockCollisionProvider collisionProvider, PathAgent agent,
+                                     BoundingBox shiftedBounds, double sX, double sY, double sZ, boolean isJump) {
         double maximumDelta = isJump ? agent.jumpHeight() : agent.fallTolerance();
         double delta = 0;
-
-        double hX = shiftedBounds.getCenterX();
-        double hY = shiftedBounds.getMinY();
-        double hZ = shiftedBounds.getCenterZ();
 
         do {
             List<BlockCollisionView> collisions = collisionProvider.solidsOverlapping(shiftedBounds);
@@ -104,7 +107,7 @@ class WalkNodeStepper implements NodeStepper {
             double stepDelta; //stepDelta i'm stuck
             if(collisions.isEmpty()) {
                 if(isJump) { //termination condition for jumping
-                    return Vectors.of(hX + 0.5, hY, hZ + 0.5);
+                    return Vectors.of(sX + 0.5, sY, sZ + 0.5);
                 }
                 else {
                     stepDelta = -agent.height();
@@ -113,15 +116,15 @@ class WalkNodeStepper implements NodeStepper {
             else {
                 BlockCollisionView highest = selectHighest(collisions);
 
-                hX = highest.x();
-                hY = highest.exactY();
-                hZ = highest.z();
+                sX = highest.x();
+                sY = highest.exactY();
+                sZ = highest.z();
 
                 if(isJump) {
                     stepDelta = highest.exactY() - shiftedBounds.getMinY();
                 }
                 else { //termination condition for falling
-                    return Vectors.of(highest.x() + 0.5, highest.exactY(), highest.z() + 0.5);
+                    return Vectors.of(sX + 0.5, sY, sZ + 0.5);
                 }
             }
 
@@ -133,19 +136,16 @@ class WalkNodeStepper implements NodeStepper {
         return null;
     }
 
-    private BoundingBox getAgentBounds(PathAgent agent, Vector3D newAgentPosition) {
-        if(lastAgentPosition == null || !Vectors.fuzzyEquals(newAgentPosition, lastAgentPosition)) {
+    private BoundingBox getAgentBounds(PathAgent agent, Vector3D position) {
+        if(lastAgentPosition == null || !Vectors.fuzzyEquals(position, lastAgentPosition)) {
             double halfWidth = agent.width() / 2;
             double height = agent.height();
             cachedAgentBounds = new BoundingBox(
-                    newAgentPosition.x() - halfWidth,
-                    newAgentPosition.y(),
-                    newAgentPosition.z() - halfWidth,
-                    newAgentPosition.x() + halfWidth,
-                    newAgentPosition.y() + height,
-                    newAgentPosition.z() + halfWidth);
+                    position.x() - halfWidth, position.y(),
+                    position.z() - halfWidth, position.x() + halfWidth,
+                    position.y() + height, position.z() + halfWidth);
 
-            lastAgentPosition = newAgentPosition;
+            lastAgentPosition = position;
         }
 
         return cachedAgentBounds;
@@ -170,6 +170,7 @@ class WalkNodeStepper implements NodeStepper {
         Vector3I agentBlockPosition = Vectors.asIntFloor(agentPosition);
         Vector3I targetBlock = Vectors.add(agentBlockPosition, direction);
         Vector3D targetBlockCenter = Vectors.add(targetBlock, BLOCK_OFFSET);
+
         return Vectors.of(targetBlockCenter.x() - agentPosition.x(), direction.y(),
                 targetBlockCenter.z() - agentPosition.z());
     }

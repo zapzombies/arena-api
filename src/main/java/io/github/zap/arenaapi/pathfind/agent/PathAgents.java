@@ -42,8 +42,9 @@ public final class PathAgents {
     }
 
     public static @NotNull PathAgent fromEntity(@NotNull Entity entity, double jumpHeight, double fallTolerance) {
-        while(entity.getVehicle() != null) {
-            entity = entity.getVehicle();
+        Entity vehicle;
+        while((vehicle = entity.getVehicle()) != null) {
+            entity = vehicle;
         }
 
         Location location = entity.getLocation();
