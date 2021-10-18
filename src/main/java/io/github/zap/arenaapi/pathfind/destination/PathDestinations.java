@@ -19,6 +19,14 @@ import java.util.List;
 import java.util.Objects;
 
 public final class PathDestinations {
+    public static @NotNull PathDestination basic(@NotNull Vector3I vector3I) {
+        return new PathDestinationImpl(new PathTarget() {}, vector3I.x(), vector3I.y(), vector3I.z());
+    }
+
+    public static @NotNull PathDestination basic(int x, int y, int z) {
+        return new PathDestinationImpl(new PathTarget() {}, x, y, z);
+    }
+
     public static @NotNull PathDestination basic(@NotNull PathTarget target, int x, int y, int z) {
         return new PathDestinationImpl(target, x, y, z);
     }
@@ -44,7 +52,8 @@ public final class PathDestinations {
         return new PathDestinationImpl(target, location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
-    public static @Nullable PathDestination fromCoordinates(@NotNull PathTarget target, @NotNull World world, double x, double y, double z) {
+    public static @Nullable PathDestination fromCoordinates(@NotNull PathTarget target, @NotNull World world,
+                                                            double x, double y, double z) {
         if(Utils.isValidLocation(new Location(world, x, y, z))) {
             return new PathDestinationImpl(target, NumberConversions.floor(x), NumberConversions.floor(y),
                     NumberConversions.floor(z));

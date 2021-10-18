@@ -2,6 +2,8 @@ package io.github.zap.arenaapi.pathfind.agent;
 
 
 import io.github.zap.commons.vectors.Vector3D;
+import org.bukkit.util.BoundingBox;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Used to represent a navigation-capable object.
@@ -46,4 +48,6 @@ public interface PathAgent extends Vector3D {
      * @return The fall tolerance of this PathAgent
      */
     double fallTolerance();
+
+    @NotNull BoundingBox getBounds();
 }

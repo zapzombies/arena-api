@@ -52,8 +52,8 @@ public class EntityBridge_v1_16_R3 implements EntityBridge {
         List<PathPoint> points = new ArrayList<>();
 
         for(PathPointWrapper wrapper : pointWrappers) {
-            PathPointWrapper_v1_16_R3 specific = (PathPointWrapper_v1_16_R3)wrapper;
-            points.add(specific.pathPoint());
+            PathPointWrapper_v1_16_R3 wrapper16 = (PathPointWrapper_v1_16_R3)wrapper;
+            points.add(wrapper16.pathPoint());
         }
 
         return new PathEntityWrapper_v1_16_R3(new PathEntity(points, new BlockPosition(destination.x(), destination.y(),

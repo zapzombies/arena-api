@@ -2,22 +2,27 @@ package io.github.zap.arenaapi.pathfind.step;
 
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
 import io.github.zap.arenaapi.nms.common.world.VoxelShapeWrapper;
+import io.github.zap.arenaapi.nms.common.world.WorldBridge;
 import io.github.zap.arenaapi.pathfind.chunk.ChunkBounds;
 import io.github.zap.arenaapi.pathfind.agent.PathAgent;
 import io.github.zap.arenaapi.pathfind.path.PathNode;
 import io.github.zap.arenaapi.pathfind.path.PathNodeFactory;
 import io.github.zap.arenaapi.pathfind.context.PathfinderContext;
+import io.github.zap.arenaapi.pathfind.util.Utils;
 import io.github.zap.commons.vectors.*;
+import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.image.DirectColorModel;
 
 @SuppressWarnings("ClassCanBeRecord") //unintelliJ
 class WalkNodeExplorer implements NodeExplorer {
+    private final WorldBridge worldBridge;
     private final NodeStepper stepper;
     private final ChunkBounds chunkBounds;
 
-    WalkNodeExplorer(@NotNull NodeStepper stepper, @NotNull ChunkBounds chunkBounds) {
+    WalkNodeExplorer(@NotNull WorldBridge worldBridge, @NotNull NodeStepper stepper, @NotNull ChunkBounds chunkBounds) {
+        this.worldBridge = worldBridge;
         this.stepper = stepper;
         this.chunkBounds = chunkBounds;
     }
@@ -40,14 +45,13 @@ class WalkNodeExplorer implements NodeExplorer {
         }
 
         Vector3D position;
-        boolean isFirst;
+        boolean isFirst = false;
         if(Vectors.equals(Vectors.asIntFloor(agent), current)) { //use exact agent position for first node...
             position = agent;
             isFirst = true;
         }
         else { //...otherwise, make the assumption it's trying to pathfind from the exact center of the block
             position = Vectors.of(current.x() + 0.5, currentBlock.exactY(), current.z() + 0.5);
-            isFirst = false;
         }
 
         int j = 0;
@@ -79,5 +83,14 @@ class WalkNodeExplorer implements NodeExplorer {
         if(j < buffer.length) {
             buffer[j] = null;
         }
+    }
+
+    @Override
+    public <T extends PathNode> T initializeFirst(@NotNull PathfinderContext context, @NotNull PathAgent agent,
+                                                  @NotNull PathNodeFactory<T> pathNodeFactory) {
+        BlockCollisionView block = Utils.highestBlockBelow(context.blockProvider().world(), worldBridge,
+                agent.getBounds());
+        return pathNodeFactory.make(Vectors.of(NumberConversions.floor(agent.x()), block.collision().isPartial() ?
+                block.y() : block.y() + 1, NumberConversions.floor(agent.z())));
     }
 }
