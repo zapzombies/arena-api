@@ -17,12 +17,10 @@ import java.awt.image.DirectColorModel;
 
 @SuppressWarnings("ClassCanBeRecord") //unintelliJ
 class WalkNodeExplorer implements NodeExplorer {
-    private final WorldBridge worldBridge;
     private final NodeStepper stepper;
     private final ChunkBounds chunkBounds;
 
-    WalkNodeExplorer(@NotNull WorldBridge worldBridge, @NotNull NodeStepper stepper, @NotNull ChunkBounds chunkBounds) {
-        this.worldBridge = worldBridge;
+    WalkNodeExplorer(@NotNull NodeStepper stepper, @NotNull ChunkBounds chunkBounds) {
         this.stepper = stepper;
         this.chunkBounds = chunkBounds;
     }
@@ -88,8 +86,7 @@ class WalkNodeExplorer implements NodeExplorer {
     @Override
     public <T extends PathNode> T initializeFirst(@NotNull PathfinderContext context, @NotNull PathAgent agent,
                                                   @NotNull PathNodeFactory<T> pathNodeFactory) {
-        BlockCollisionView block = Utils.highestBlockBelow(context.blockProvider().world(), worldBridge,
-                agent.getBounds());
+        BlockCollisionView block = Utils.highestBlockBelow(context.blockProvider(), agent.getBounds());
         return pathNodeFactory.make(Vectors.of(NumberConversions.floor(agent.x()), block.collision().isPartial() ?
                 block.y() : block.y() + 1, NumberConversions.floor(agent.z())));
     }

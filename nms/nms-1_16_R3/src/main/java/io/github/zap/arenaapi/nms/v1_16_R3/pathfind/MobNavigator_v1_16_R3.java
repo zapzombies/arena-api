@@ -2,6 +2,7 @@ package io.github.zap.arenaapi.nms.v1_16_R3.pathfind;
 
 import io.github.zap.arenaapi.nms.common.pathfind.MobNavigator;
 import io.github.zap.arenaapi.nms.common.pathfind.PathEntityWrapper;
+import io.github.zap.commons.vectors.Vector3D;
 import io.github.zap.commons.vectors.Vectors;
 import net.minecraft.server.v1_16_R3.*;
 import org.bukkit.Color;
@@ -276,12 +277,16 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
             if (!agentPos.a(currentCenterPos, 2)) { //if agentPos is not within 2 blocks of the target node
                 return false;
             } else {
-                Vec3D nextCenterPos = Vec3D.c(this.c.d(this.c.f() + 1));
+                Vec3D temp = Vec3D.c(this.c.d(this.c.f() + 1));
+                Vec3D nextCenterPos = new Vec3D(temp.x, 0, temp.z);
 
                 //whoa look more code whose only purpose is to fix mojang's incompetence
-                if(agentPos.a(nextCenterPos, SQRT_2)) {
-                    Vec3D nextMinusCurrent = nextCenterPos.d(currentCenterPos);
-                    Vec3D agentMinusCurrent = agentPos.d(currentCenterPos);
+                Vec3D agentPos2 = new Vec3D(agentPos.x, 0, agentPos.z);
+                Vec3D currentCenterPos2 = new Vec3D(currentCenterPos.x, 0, currentCenterPos.z);
+
+                if(agentPos2.a(nextCenterPos, SQRT_2)) {
+                    Vec3D nextMinusCurrent = nextCenterPos.d(currentCenterPos2);
+                    Vec3D agentMinusCurrent = agentPos2.d(currentCenterPos2);
                     return nextMinusCurrent.b(agentMinusCurrent) > 0.0D; //acute angle test
                 }
                 else {
