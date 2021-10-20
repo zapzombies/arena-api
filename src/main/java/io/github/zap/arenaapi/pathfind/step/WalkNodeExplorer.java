@@ -87,7 +87,14 @@ class WalkNodeExplorer implements NodeExplorer {
     public <T extends PathNode> T initializeFirst(@NotNull PathfinderContext context, @NotNull PathAgent agent,
                                                   @NotNull PathNodeFactory<T> pathNodeFactory) {
         BlockCollisionView block = Utils.highestBlockBelow(context.blockProvider(), agent.getBounds());
-        return pathNodeFactory.make(Vectors.of(NumberConversions.floor(agent.x()), block.collision().isPartial() ?
-                block.y() : block.y() + 1, NumberConversions.floor(agent.z())));
+        int y;
+        if(agent.y() < block.exactY()) {
+            y = block.y();
+        }
+        else {
+            y = block.y() + 1;
+        }
+
+        return pathNodeFactory.make(Vectors.of(NumberConversions.floor(agent.x()), y, NumberConversions.floor(agent.z())));
     }
 }
