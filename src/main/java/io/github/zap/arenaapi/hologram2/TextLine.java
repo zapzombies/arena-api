@@ -17,8 +17,8 @@ public class TextLine extends PacketLine<Component> {
         super(spawnPacket, updatePacket, destroyPacket, Component.empty());
     }
 
-    public TextLine textLine(@NotNull EntityBridge entityBridge, @NotNull PacketBridge packetBridge,
-                             @NotNull Location location) {
+    public static @NotNull TextLine textLine(@NotNull EntityBridge entityBridge, @NotNull PacketBridge packetBridge,
+                                             @NotNull Location location) {
         int entityId = entityBridge.nextEntityID();
         Packet spawnPacket = packetBridge.createSpawnLivingEntityPacket(entityId,
                 entityBridge.getEntityTypeID(EntityType.ARMOR_STAND), entityBridge.randomUUID(), location.getX(),

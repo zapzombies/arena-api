@@ -1,9 +1,8 @@
 package io.github.zap.arenaapi.hologram2;
 
 import io.github.zap.arenaapi.ArenaApi;
-import io.github.zap.arenaapi.nms.common.packet.Packet;
+import io.github.zap.arenaapi.nms.common.entity.EntityBridge;
 import io.github.zap.arenaapi.nms.common.packet.PacketBridge;
-import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -22,30 +21,34 @@ public class Hologram {
 
     private final Plugin plugin;
 
+    private final EntityBridge entityBridge;
+
     private final PacketBridge packetBridge;
 
-    @Getter
     private final List<HologramLine<?>> hologramLines = new ArrayList<>();
 
     private final double lineSpace;
 
     private final Location rootLocation;
 
-    public Hologram(@NotNull Plugin plugin, @NotNull PacketBridge packetBridge, @NotNull Location location,
-                    double lineSpace) {
+    public Hologram(@NotNull Plugin plugin, @NotNull EntityBridge entityBridge, @NotNull PacketBridge packetBridge,
+                    @NotNull Location location, double lineSpace) {
         this.plugin = plugin;
+        this.entityBridge = entityBridge;
         this.packetBridge = packetBridge;
         this.rootLocation = location;
         this.lineSpace = lineSpace;
     }
 
     public Hologram(@NotNull ArenaApi arenaApi, @NotNull Location location) {
-        this(arenaApi, arenaApi.getNmsBridge().packetBridge(), location, DEFAULT_LINE_SPACE);
+        this(arenaApi, arenaApi.getNmsBridge().entityBridge(), arenaApi.getNmsBridge().packetBridge(), location,
+                DEFAULT_LINE_SPACE);
     }
 
     @Deprecated
     public Hologram(@NotNull Location location, double lineSpace) {
-        this(ArenaApi.getInstance(), ArenaApi.getInstance().getNmsBridge().packetBridge(), location, lineSpace);
+        this(ArenaApi.getInstance(), ArenaApi.getInstance().getNmsBridge().entityBridge(),
+                ArenaApi.getInstance().getNmsBridge().packetBridge(), location, lineSpace);
     }
 
     @Deprecated
@@ -57,17 +60,15 @@ public class Hologram {
      * Adds a line with a message key and format arguments
      * @param message A pair of the message key and format arguments
      */
-    public void addLine(Component message) {
-        PacketLine textLine = createTextLine(rootLocation.clone().subtract(0, lineSpace * hologramLines.size(),
-                0), message);
+    public void addLine(@NotNull Component message) {
+        PacketLine<Component> textLine = createTextLine(rootLocation.clone().subtract(0,
+                lineSpace * hologramLines.size(), 0), message);
         hologramLines.add(textLine);
     }
 
-    private PacketLine createTextLine(Location location, Component message) {
-        PacketLine textLine = new PacketLine(location);
-        textLine.setVisualForEveryone(message);
+    private @NotNull PacketLine<Component> createTextLine(@NotNull Location location, @NotNull Component message) {
 
-        return textLine;
+        return TextLine.textLine(entityBridge, packetBridge, location);
     }
 
     /**
@@ -75,10 +76,12 @@ public class Hologram {
      * @param index The index of the line to update
      * @param message The updated line
      */
-    public void updateLineForEveryone(int index, Component message) {
+    public void updateLineForEveryone(int index, @NotNull Component message) {
         HologramLine<?> hologramLine = hologramLines.get(index);
-        if (hologramLine instanceof PacketLine textLine) {
-            textLine.setVisualForEveryone(message);
+        if (hologramLine instanceof TextLine textLine) {
+            for (Player player : rootLocation.getWorld().getPlayers()) {
+                textLine.setVisualForPlayer(plugin, player, message);
+            }
         } else {
 
         }
@@ -89,9 +92,9 @@ public class Hologram {
      * @param index The index of the line to update
      * @param message The updated line
      */
-    public void updateLine(int index, Component message) {
+    public void updateLine(int index, @NotNull Component message) {
         HologramLine<?> hologramLine = hologramLines.get(index);
-        if (hologramLine instanceof PacketLine textLine) {
+        if (hologramLine instanceof TextLine textLine) {
             textLine.setVisual(message);
         } else {
 
@@ -112,10 +115,10 @@ public class Hologram {
      * Creates and renders the hologram for a player
      * @param player The player to render the hologram to
      */
-    public void renderToPlayer(Player player) {
+    public void renderToPlayer(@NotNull Player player) {
         for (HologramLine<?> hologramLine : hologramLines) {
             hologramLine.createVisualForPlayer(plugin, player);
-            hologramLine.updateVisualForPlayer(player);
+            hologramLine.updateVisualForPlayer(plugin, player);
         }
     }
 
@@ -123,18 +126,16 @@ public class Hologram {
      * Destroys the hologram
      */
     public void destroy() {
-        int idCount = hologramLines.size();
-
-        int[] ids = new int[idCount];
-        for (int i = 0; i < idCount; i++) {
-            ids[i] = hologramLines.get(0).getEntityId();
-            hologramLines.remove(0);
+        while (!hologramLines.isEmpty()) {
+            HologramLine<?> line = hologramLines.remove(0);
+            for (Player player : rootLocation.getWorld().getPlayers()) {
+                line.destroyVisualForPlayer(plugin, player);
+            }
         }
+    }
 
-        Packet packet = packetBridge.createDestroyEntitiesPacket(ids);
-        for (Player player : rootLocation.getWorld().getPlayers()) {
-            packet.sendToPlayer(plugin, player);
-        }
+    public @NotNull List<HologramLine<?>> getHologramLines() {
+        return hologramLines;
     }
 
 }
