@@ -38,7 +38,7 @@ dependencies {
     relocate("org.apache.commons:commons-lang3:3.12.0")
     relocate("it.unimi.dsi:fastutil:8.5.6")
 
-    bukkitPlugin("io.github.zap:zap-party:1.0.0-SNAPSHOT-1630956414", qs())
+    bukkitPlugin("io.github.zap:zap-party:1.0.0-SNAPSHOT-1638065973", qs())
     bukkitPlugin("com.comphenix.protocol:ProtocolLib:4.7.0")
 
     compileOnly("org.projectlombok:lombok:1.18.20")
