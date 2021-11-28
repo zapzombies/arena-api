@@ -15,15 +15,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 @SuppressWarnings("ClassCanBeRecord")
-public class PacketBridge_v1_16_R3 implements PacketBridge {
+public class ProtocolLibPacketBridge_v1_16_R3 implements PacketBridge {
 
     private final static byte INVISIBLE_BYTE_MASK = (byte) 0x20;
 
-    private final static byte MARKER_ARMOR_STAND_MARK = (byte) 0x10;
+    private final static byte MARKER_ARMOR_STAND_MASK = (byte) 0x10;
 
     protected final ProtocolManager protocolManager;
 
-    public PacketBridge_v1_16_R3(@NotNull ProtocolManager protocolManager) {
+    public ProtocolLibPacketBridge_v1_16_R3(@NotNull ProtocolManager protocolManager) {
         this.protocolManager = protocolManager;
     }
 
@@ -67,7 +67,7 @@ public class PacketBridge_v1_16_R3 implements PacketBridge {
         wrappedDataWatcher.setObject(invisible, INVISIBLE_BYTE_MASK);
         wrappedDataWatcher.setObject(customName, Optional.of(AdventureComponentConverter.fromComponent(line)));
         wrappedDataWatcher.setObject(customNameVisible, true);
-        wrappedDataWatcher.setObject(marker, MARKER_ARMOR_STAND_MARK);
+        wrappedDataWatcher.setObject(marker, MARKER_ARMOR_STAND_MASK);
 
         packetContainer.getWatchableCollectionModifier().write(0, wrappedDataWatcher.getWatchableObjects());
 

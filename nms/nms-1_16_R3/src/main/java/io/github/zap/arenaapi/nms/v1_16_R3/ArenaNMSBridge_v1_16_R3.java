@@ -10,7 +10,7 @@ import io.github.zap.arenaapi.nms.common.player.PlayerBridge;
 import io.github.zap.arenaapi.nms.common.world.WorldBridge;
 import io.github.zap.arenaapi.nms.v1_16_R3.entity.EntityBridge_v1_16_R3;
 import io.github.zap.arenaapi.nms.v1_16_R3.itemstack.ItemStackBridge_v1_16_R3;
-import io.github.zap.arenaapi.nms.v1_16_R3.packet.PacketBridge_v1_16_R3;
+import io.github.zap.arenaapi.nms.v1_16_R3.packet.ProtocolLibPacketBridge_v1_16_R3;
 import io.github.zap.arenaapi.nms.v1_16_R3.player.PlayerBridge_v1_16_R3;
 import io.github.zap.arenaapi.nms.v1_16_R3.world.WorldBridge_v1_16_R3;
 import org.apache.commons.lang3.NotImplementedException;
@@ -32,7 +32,7 @@ public class ArenaNMSBridge_v1_16_R3 implements ArenaNMSBridge {
         }
 
         ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
-        this.packetBridge = new PacketBridge_v1_16_R3(protocolManager);
+        this.packetBridge = new ProtocolLibPacketBridge_v1_16_R3(protocolManager);
     }
 
     @Override
