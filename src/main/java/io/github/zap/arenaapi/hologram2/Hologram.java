@@ -107,8 +107,13 @@ public class Hologram {
      * @param index The index of the line to update
      * @param message The updated line
      */
-    public void updateLineForPlayer(Player player, int index, Component message) {
+    public void updateLineForPlayer(@NotNull Player player, int index, @NotNull Component message) {
+        HologramLine<?> hologramLine = hologramLines.get(index);
+        if (hologramLine instanceof TextLine textLine) {
+            textLine.setVisualForPlayer(plugin, player, message);
+        } else {
 
+        }
     }
 
     /**
