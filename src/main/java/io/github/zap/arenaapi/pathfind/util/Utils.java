@@ -2,6 +2,7 @@ package io.github.zap.arenaapi.pathfind.util;
 
 import io.github.zap.arenaapi.nms.common.util.BoundedBlockIterator;
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
+import io.github.zap.arenaapi.nms.common.world.BlockSource;
 import io.github.zap.arenaapi.nms.common.world.WorldBridge;
 import io.github.zap.arenaapi.pathfind.collision.BlockCollisionProvider;
 import io.github.zap.commons.vectors.Vectors;
@@ -19,8 +20,7 @@ public class Utils {
         return location.getWorld().getWorldBorder().isInside(location) && location.getY() >= 0 && location.getY() < 256;
     }
 
-    public static @NotNull BlockCollisionView highestBlockBelow(@NotNull World world, @NotNull WorldBridge bridge,
-                                                                @NotNull BoundingBox boundingBox) {
+    public static BlockCollisionView highestBlockBelow(@NotNull BlockSource source, @NotNull BoundingBox boundingBox) {
         BoundingBox shrunkenBounds = boundingBox.clone().resize(
                 boundingBox.getMinX(), boundingBox.getMinY(), boundingBox.getMinZ(),
                 boundingBox.getMaxX(), boundingBox.getMinY() + 1, boundingBox.getMaxZ());
@@ -28,8 +28,7 @@ public class Utils {
         List<BlockCollisionView> views = new ArrayList<>();
         do {
             shrunkenBounds.shift(0, -1, 0);
-            BoundedBlockIterator iterator = new BoundedBlockIterator((x, y, z) ->
-                    bridge.collisionFor(world.getBlockAt(x, y, z)), shrunkenBounds);
+            BoundedBlockIterator iterator = new BoundedBlockIterator(source, shrunkenBounds);
 
             while(iterator.hasNext()) {
                 BlockCollisionView view = iterator.next();
@@ -55,7 +54,7 @@ public class Utils {
             return highestView;
         }
 
-        return bridge.collisionFor(world.getBlockAt(NumberConversions.floor(boundingBox.getCenterX()),
-                NumberConversions.floor(boundingBox.getMinY()), NumberConversions.floor(boundingBox.getCenterZ())));
+        return source.getBlock(NumberConversions.floor(boundingBox.getCenterX()),
+                NumberConversions.floor(boundingBox.getMinY()), NumberConversions.floor(boundingBox.getCenterZ()));
     }
 }

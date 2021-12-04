@@ -41,7 +41,8 @@ public final class PathDestinations {
 
         if(Utils.isValidLocation(entity.getLocation())) {
             if(findBlock) {
-                BlockCollisionView highest = Utils.highestBlockBelow(entity.getWorld(), bridge, entity.getBoundingBox());
+                BlockCollisionView highest = Utils.highestBlockBelow((x, y, z) -> bridge.collisionFor(entity.getWorld()
+                        .getBlockAt(x, y, z)), entity.getBoundingBox());
 
                 if(!highest.collision().isEmpty()) {
                     return new PathDestinationImpl(target, highest.x(), NumberConversions.floor(highest.exactY()), highest.z());

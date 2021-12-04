@@ -29,8 +29,6 @@ public class PathOperationBuilder {
     private static final double DEFAULT_JUMP_HEIGHT = 1.125;
     private static final double DEFAULT_FALL_TOLERANCE = 16;
 
-    private final WorldBridge bridge;
-
     private final PathAgent agent;
     private final Entity agentEntity;
     private final PathDestination destination;
@@ -50,17 +48,13 @@ public class PathOperationBuilder {
 
     private int pathfindRadius = DEFAULT_PATHFIND_RADIUS;
 
-    public PathOperationBuilder(@NotNull WorldBridge bridge, @NotNull PathAgent agent,
-                                @NotNull PathDestination destination) {
-        this.bridge = Objects.requireNonNull(bridge, "bridge cannot be null");
+    public PathOperationBuilder(@NotNull PathAgent agent, @NotNull PathDestination destination) {
         this.agent = Objects.requireNonNull(agent, "agent cannot be null");
         this.agentEntity = null;
         this.destination = Objects.requireNonNull(destination, "destination cannot be null");
     }
 
-    public PathOperationBuilder(@NotNull WorldBridge bridge, @NotNull Entity agentEntity,
-                                @NotNull PathDestination destination) {
-        this.bridge = Objects.requireNonNull(bridge, "bridge cannot be null");
+    public PathOperationBuilder(@NotNull Entity agentEntity, @NotNull PathDestination destination) {
         this.agent = null;
         this.agentEntity = Objects.requireNonNull(agentEntity, "agentEntity cannot be null");
         this.destination = Objects.requireNonNull(destination, "destination cannot be null");
@@ -117,9 +111,6 @@ public class PathOperationBuilder {
     }
 
     public @NotNull PathOperation build() {
-        Objects.requireNonNull(bridge, "Must specify a bridge!");
-        Objects.requireNonNull(destination, "Must specify a destination!");
-
         heuristicCalculator = heuristicCalculator == null ? HeuristicCalculators.distanceOnly() : heuristicCalculator;
         aversionCalculator = aversionCalculator == null ? AversionCalculators.defaultWalk() : aversionCalculator;
         successCondition = successCondition == null ? SuccessConditions.sameBlock() : successCondition;
@@ -130,7 +121,7 @@ public class PathOperationBuilder {
 
         chunkBounds = chunkBounds == null ?
                 ChunkCoordinateProviders.squareFromCenter(Vectors.asChunk(agent), pathfindRadius) : chunkBounds;
-        nodeExplorer = nodeExplorer == null ? NodeExplorers.basicWalk(bridge, nodeStepper == null ?
+        nodeExplorer = nodeExplorer == null ? NodeExplorers.basicWalk(nodeStepper == null ?
                 NodeSteppers.basicWalk() : nodeStepper, chunkBounds) : nodeExplorer;
 
         return new PathOperationImpl(agent, destination, heuristicCalculator, aversionCalculator, successCondition,
