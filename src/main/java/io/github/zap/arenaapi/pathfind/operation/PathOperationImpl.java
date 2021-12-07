@@ -1,5 +1,6 @@
 package io.github.zap.arenaapi.pathfind.operation;
 
+import com.google.common.math.DoubleMath;
 import io.github.zap.arenaapi.nms.common.world.BlockCollisionView;
 import io.github.zap.arenaapi.pathfind.agent.PathAgent;
 import io.github.zap.arenaapi.pathfind.calculate.AversionCalculator;
@@ -12,6 +13,7 @@ import io.github.zap.arenaapi.pathfind.destination.PathDestination;
 import io.github.zap.arenaapi.pathfind.path.PathNode;
 import io.github.zap.arenaapi.pathfind.path.PathResult;
 import io.github.zap.arenaapi.pathfind.path.PathResults;
+import io.github.zap.arenaapi.pathfind.process.PostProcessor;
 import io.github.zap.arenaapi.pathfind.step.NodeExplorer;
 import io.github.zap.commons.graph.ArrayChunkGraph;
 import io.github.zap.commons.graph.ChunkGraph;
@@ -19,6 +21,9 @@ import io.github.zap.commons.vectors.Vectors;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 class PathOperationImpl implements PathOperation {
     private final PathAgent agent;
@@ -34,6 +39,7 @@ class PathOperationImpl implements PathOperation {
     private final NodeHeap openHeap = new BinaryMinNodeHeap(32);
 
     private final PathNodeImpl[] sampleBuffer = new PathNodeImpl[9];
+    private final List<PostProcessor> postProcessors;
 
     private State state = State.STARTED;
     private PathNodeImpl currentNode;
@@ -43,7 +49,7 @@ class PathOperationImpl implements PathOperation {
     PathOperationImpl(@NotNull PathAgent agent, @NotNull PathDestination destination,
                       @NotNull HeuristicCalculator heuristicCalculator, @NotNull AversionCalculator aversionCalculator,
                       @NotNull SuccessCondition condition, @NotNull NodeExplorer nodeExplorer,
-                      @NotNull ChunkBounds searchArea) {
+                      @NotNull ChunkBounds searchArea, @NotNull List<PostProcessor> postProcessors) {
         this.agent = agent;
         this.destination = destination;
         this.heuristicCalculator = heuristicCalculator;
@@ -51,6 +57,7 @@ class PathOperationImpl implements PathOperation {
         this.condition = condition;
         this.nodeExplorer = nodeExplorer;
         this.searchArea = searchArea;
+        this.postProcessors = new ArrayList<>(postProcessors);
 
         visited = new ArrayChunkGraph<>(searchArea.minX(), searchArea.minZ(), searchArea.maxX(), searchArea.maxZ());
     }
@@ -68,18 +75,17 @@ class PathOperationImpl implements PathOperation {
                     currentNode = openHeap.takeBest();
                 }
                 else {
-                    complete(false);
+                    complete(false, context);
                     return true;
                 }
             }
             else {
-                currentNode = new PathNodeImpl(NumberConversions.floor(agent.x()), NumberConversions.floor(agent.y()),
-                        NumberConversions.floor(agent.z()));
+                currentNode = nodeExplorer.initializeFirst(context, agent, PathNodeImpl::new);
                 currentNode.score.set(0, heuristicCalculator.compute(context, currentNode, destination));
                 bestFound = currentNode;
 
                 if(condition.hasCompleted(context, currentNode, destination)) {
-                    complete(true);
+                    complete(true, context);
                     return true;
                 }
             }
@@ -116,7 +122,7 @@ class PathOperationImpl implements PathOperation {
 
                 if(condition.hasCompleted(context, candidateNode, destination)) {
                     bestFound = candidateNode;
-                    complete(true);
+                    complete(true, context);
                     return true;
                 }
             }
@@ -194,8 +200,14 @@ class PathOperationImpl implements PathOperation {
                 Vectors.distance(node, node.parent)));
     }
 
-    private void complete(boolean success) {
+    private void complete(boolean success, PathfinderContext context) {
         state = success ? State.SUCCEEDED : State.FAILED;
-        result = PathResults.basic(bestFound.reverse(), this, destination, state);
+
+        PathNode first = bestFound.reverse();
+        for(PostProcessor processor : postProcessors) {
+            first = processor.process(context, agent, first);
+        }
+
+        result = PathResults.basic(first, this, destination, state);
     }
 }

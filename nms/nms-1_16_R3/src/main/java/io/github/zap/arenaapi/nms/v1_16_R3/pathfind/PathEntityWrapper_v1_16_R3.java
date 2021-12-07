@@ -7,6 +7,8 @@ import net.minecraft.server.v1_16_R3.PathPoint;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 public record PathEntityWrapper_v1_16_R3(PathEntity pathEntity) implements PathEntityWrapper {
     @Override
     public int pathLength() {
@@ -32,5 +34,9 @@ public record PathEntityWrapper_v1_16_R3(PathEntity pathEntity) implements PathE
     @Override
     public void addPoint(int x, int y, int z) {
         pathEntity.getPoints().add(new PathPoint(x, y, z));
+    }
+
+    public @NotNull PathEntity pathEntity() {
+        return pathEntity;
     }
 }

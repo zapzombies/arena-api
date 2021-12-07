@@ -2,7 +2,10 @@ package io.github.zap.arenaapi.nms.v1_16_R3.pathfind;
 
 import io.github.zap.arenaapi.nms.common.pathfind.MobNavigator;
 import io.github.zap.arenaapi.nms.common.pathfind.PathEntityWrapper;
+import io.github.zap.commons.vectors.Vector3D;
+import io.github.zap.commons.vectors.Vectors;
 import net.minecraft.server.v1_16_R3.*;
+import org.bukkit.Color;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
+    private final double SQRT_2 = Math.sqrt(2);
     private PathEntityWrapper_v1_16_R3 currentPath;
     private boolean isStopped = false;
     private double lastSpeed;
@@ -41,8 +45,9 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
                 }
             }
 
-            currentPath = null;
-            a((PathEntity)null, speed);
+
+            newPath.c(0);
+            a(newPath, speed);
         }
     }
 
@@ -68,7 +73,6 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
 
             return currentPoint.getX() == entityX && currentPoint.getY() == entityY && currentPoint.getZ() == entityZ;
         }
-
 
         return false;
     }
@@ -247,5 +251,75 @@ public class MobNavigator_v1_16_R3 extends Navigation implements MobNavigator {
     }
 
     @Override
-    protected void D_() { }
+    protected void l() {
+        Vec3D agentPos = this.b();
+        this.l = this.a.getWidth() > 0.75F ? this.a.getWidth() / 2.0F : 0.75F - this.a.getWidth() / 2.0F;
+        BlockPosition blockposition = this.c.g();
+        double d0 = Math.abs(this.a.locX() - ((double)blockposition.getX() + 0.5D));
+        double d1 = Math.abs(this.a.locY() - (double)blockposition.getY());
+        double d2 = Math.abs(this.a.locZ() - ((double)blockposition.getZ() + 0.5D));
+        boolean flag = d0 < (double)this.l && d2 < (double)this.l && d1 < 1.0D;
+
+        //|| this.a.b(this.c.h().l) && this.canAdvance(agentPos)
+        if (flag || this.canAdvance(agentPos)) {
+            this.c.a();
+        }
+
+        this.a(agentPos);
+    }
+
+    private boolean canAdvance(Vec3D agentPos) {
+        if (this.c.f() + 1 >= this.c.e()) {
+            return false;
+        } else {
+            Vec3D currentCenterPos = Vec3D.c(this.c.g());
+
+            if (!agentPos.a(currentCenterPos, 2)) { //if agentPos is not within 2 blocks of the target node
+                return false;
+            } else {
+                Vec3D temp = Vec3D.c(this.c.d(this.c.f() + 1));
+                Vec3D nextCenterPos = new Vec3D(temp.x, 0, temp.z);
+
+                //whoa look more code whose only purpose is to fix mojang's incompetence
+                Vec3D agentPos2 = new Vec3D(agentPos.x, 0, agentPos.z);
+                Vec3D currentCenterPos2 = new Vec3D(currentCenterPos.x, 0, currentCenterPos.z);
+
+                if(agentPos2.a(nextCenterPos, SQRT_2)) {
+                    Vec3D nextMinusCurrent = nextCenterPos.d(currentCenterPos2);
+                    Vec3D agentMinusCurrent = agentPos2.d(currentCenterPos2);
+                    return nextMinusCurrent.b(agentMinusCurrent) > 0.0D; //acute angle test
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void c() {
+        ++this.e;
+
+        if (!this.m()) {
+            Vec3D vec3d;
+            if (this.a()) { //if entity valid for pathfinding...
+                this.l();
+            } else if (this.c != null && !this.c.c()) {
+                vec3d = this.b();
+                Vec3D vec3d1 = this.c.a(this.a);
+                if (vec3d.y > vec3d1.y && !this.a.isOnGround() && MathHelper.floor(vec3d.x) ==
+                        MathHelper.floor(vec3d1.x) && MathHelper.floor(vec3d.z) == MathHelper.floor(vec3d1.z)) {
+                    this.c.a();
+                }
+            }
+
+            if (!this.m()) {
+                vec3d = this.c.a(this.a);
+
+                BlockPosition blockposition = new BlockPosition(vec3d);
+                this.a.getControllerMove().a(vec3d.x, this.b.getType(blockposition.down()).isAir() ? vec3d.y :
+                        PathfinderNormal.a(this.b, blockposition), vec3d.z, this.d);
+            }
+        }
+    }
 }

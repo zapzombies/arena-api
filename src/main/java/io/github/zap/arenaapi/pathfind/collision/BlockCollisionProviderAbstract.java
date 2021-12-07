@@ -105,11 +105,6 @@ abstract class BlockCollisionProviderAbstract implements BlockCollisionProvider 
         return "BlockCollisionProviderAbstract{world=" + world.getName() + "}";
     }
 
-    protected long chunkKey(int x, int z) {
-        //from https://stackoverflow.com/questions/12772939/java-storing-two-ints-in-a-long
-        return (((long)x) << 32) | (z & 0xFFFFFFFFL);
-    }
-
     /*
     checks for collisions the provided boundingbox has while moving along the specified vector, checking only those
     BlockCollisionView objects that appear in the candidates list. views intersecting the original position of the

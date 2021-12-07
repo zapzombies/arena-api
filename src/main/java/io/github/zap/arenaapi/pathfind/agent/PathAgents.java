@@ -41,15 +41,15 @@ public final class PathAgents {
         return new PathAgentImpl(vector.x(), vector.y(), vector.z(), width, height, jumpHeight, fallTolerance);
     }
 
-    public static @NotNull PathAgent fromEntity(@NotNull Entity entity, @NotNull WorldBridge bridge, double jumpHeight, double fallTolerance) {
-        while(entity.getVehicle() != null) {
-            entity = entity.getVehicle();
+    public static @NotNull PathAgent fromEntity(@NotNull Entity entity, double jumpHeight, double fallTolerance) {
+        Entity vehicle;
+        while((vehicle = entity.getVehicle()) != null) {
+            entity = vehicle;
         }
 
-        BlockCollisionView view = Utils.highestBlockBelow(entity.getWorld(), bridge, entity.getBoundingBox());
         Location location = entity.getLocation();
 
-        return fromVector(Vectors.of(location.getX(), view.exactY(), location.getZ()), entity.getWidth(),
+        return fromVector(Vectors.of(location.getX(), location.getY(), location.getZ()), entity.getWidth(),
                 entity.getHeight(), jumpHeight, fallTolerance);
     }
 }
