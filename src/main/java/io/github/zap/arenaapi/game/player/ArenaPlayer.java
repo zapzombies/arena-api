@@ -7,47 +7,29 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 public abstract class ArenaPlayer<PlayerType extends ArenaPlayer<PlayerType>> implements PlayerView {
+
     protected final ReloadablePlugin<?> playerPlugin;
-    protected final UUID playerUUID;
+    protected final PlayerView playerView;
 
-    private final Map<String, StateOperation> stateMap;
-    private Reference<Player> playerCache;
-    private StateOperation currentState;
+    private final Map<String, StateOperation> stateMap = new HashMap<>();
+    private StateOperation currentState = null;
 
-    protected ArenaPlayer(@NotNull ReloadablePlugin<?> plugin, @NotNull UUID playerUUID) {
+    protected ArenaPlayer(@NotNull ReloadablePlugin<?> plugin, @NotNull PlayerView playerView) {
         this.playerPlugin = Objects.requireNonNull(plugin, "plugin cannot be null");
-        this.playerUUID = Objects.requireNonNull(playerUUID, "playerUUID cannot be null");
-        this.stateMap = new HashMap<>();
-        this.playerCache = new WeakReference<>(null);
-        this.currentState = null;
+        this.playerView = Objects.requireNonNull(playerView, "playerView cannot be null");
     }
 
     @Override
     public @NotNull Optional<Player> getPlayerIfValid() {
-        if(isPlayerValid()) {
-            Player cached = playerCache.get();
-
-            if(cached == null) {
-                Player player = playerPlugin.getServer().getPlayer(playerUUID);
-                if(player != null) {
-                    playerCache = new WeakReference<>(player);
-                    return Optional.of(player);
-                }
-            }
-            else if(cached.isOnline()) {
-                return Optional.of(cached);
-            }
-            else {
-                playerCache.clear();
-            }
-        }
-        else {
-            playerCache.clear();
+        if (isPlayerValid()) {
+            playerView.getPlayerIfValid();
         }
 
         return Optional.empty();
@@ -55,12 +37,12 @@ public abstract class ArenaPlayer<PlayerType extends ArenaPlayer<PlayerType>> im
 
     @Override
     public @NotNull OfflinePlayer getOfflinePlayer() {
-        return playerPlugin.getServer().getOfflinePlayer(playerUUID);
+        return playerView.getOfflinePlayer();
     }
 
     @Override
     public @NotNull UUID getUUID() {
-        return playerUUID;
+        return playerView.getUUID();
     }
 
     public @NotNull ReloadablePlugin<?> getPlugin() {
@@ -68,18 +50,18 @@ public abstract class ArenaPlayer<PlayerType extends ArenaPlayer<PlayerType>> im
     }
 
     public void registerState(@NotNull Keyed key, @NotNull StateOperation stateOperation) {
-        if(stateMap.putIfAbsent(key.getKey(), stateOperation) != null) {
+        if (stateMap.putIfAbsent(key.getKey(), stateOperation) != null) {
             throw new IllegalArgumentException("state with key " + key + " already registered");
         }
     }
 
     public void applyState(@NotNull Keyed state) {
         StateOperation newState = stateMap.get(state.getKey());
-        if(newState != null) {
+        if (newState != null) {
             Optional<Player> playerOptional = getPlayerIfValid();
-            if(playerOptional.isPresent()) {
+            if (playerOptional.isPresent()) {
                 Player player = playerOptional.get();
-                if(currentState != null) {
+                if (currentState != null) {
                     currentState.reverse(player);
                 }
 
@@ -95,4 +77,5 @@ public abstract class ArenaPlayer<PlayerType extends ArenaPlayer<PlayerType>> im
     public abstract @NotNull PlayerType getArenaPlayer();
 
     public abstract boolean isPlayerValid();
+    
 }
